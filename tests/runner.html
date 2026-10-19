@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Tests: Firmenbuchungen</title>
+    <style>
+        body { font-family: monospace; padding: 16px; }
+        .pass { color: #137333; }
+        .fail { color: #c5221f; }
+    </style>
+</head>
+<body>
+    <h1>Tests: Firmenbuchungen</h1>
+    <p id="summary">Läuft ...</p>
+    <ul id="results"></ul>
+    <script src="../shared/company-bookings.js"></script>
+    <script src="../shared/tenant-report.js"></script>
+    <script src="../shared/landing-engagement.js"></script>
+    <script src="../shared/chat-intents.js"></script>
+    <script src="../shared/workshop-countdown.js"></script>
+    <script src="../shared/share-links.js"></script>
+    <script src="../shared/certificate.js"></script>
+    <script>
+        const results = document.getElementById('results');
+        let failures = 0;
+        let total = 0;
+
+        function assertEqual(actual, expected) {
+            if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                throw new Error(`Erwartet ${JSON.stringify(expected)}, erhalten ${JSON.stringify(actual)}`);
+            }
+        }
+
+        function assertTruthy(value) {
+            if (!value) throw new Error(`Erwartet einen wahren Wert, erhalten ${JSON.stringify(value)}`);
+        }
+
+        window.seyItTestContext = {
+            bookings: window.seyItBookings,
+            tenantReport: window.seyItTenantReport,
+            engagement: window.seyItEngagement,
+            chatIntents: window.seyItChatIntents,
+            countdown: window.seyItCountdown,
+            share: window.seyItShare,
+            certificate: window.seyItCertificate,
+            assert: {equal: assertEqual, deepEqual: assertEqual, ok: assertTruthy},
+            test(name, body) {
+                total++;
+                const item = document.createElement('li');
+                try {
+                    body();
+                    item.className = 'pass';
+                    item.textContent = `PASS ${name}`;
+                } catch (error) {
+                    failures++;
+                    item.className = 'fail';
+                    item.textContent = `FAIL ${name}: ${error.message}`;
+                }
+                results.appendChild(item);
+            }
+        };
+    </script>
+    <script src="company-bookings.test.js"></script>
+    <script src="tenant-report.test.js"></script>
+    <script src="landing-engagement.test.js"></script>
+    <script src="chat-intents.test.js"></script>
+    <script src="workshop-countdown.test.js"></script>
+    <script src="share-links.test.js"></script>
+    <script src="certificate.test.js"></script>
+    <script>
+        document.getElementById('summary').textContent = `${total - failures}/${total} Tests bestanden`;
+        document.title = failures === 0 ? 'ALLE TESTS BESTANDEN' : `${failures} TESTS FEHLGESCHLAGEN`;
+    </script>
+</body>
+</html>

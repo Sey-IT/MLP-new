@@ -1,0 +1,156 @@
+# Dateiübersicht: Was jede Datei macht und wie alles zusammenhängt
+
+Diese Übersicht erklärt jede Datei im Projektordner. Die Fachbegriffe stehen im Glossar der [Projektdokumentation](./Projektdokumentation.md).
+
+## 1. Das Ganze in einem Bild
+
+Das Projekt hat zwei Seiten, die der Besucher sieht. Beide greifen auf gemeinsame Bausteine zurück.
+
+```text
+              translations.js  (alle Texte, DE + EN)
+                    │
+        ┌───────────┴────────────┐
+        ▼                        ▼
+ Landingpage/index.html   Firmen Dashboard/firmen-dashboard.html
+        │                        │
+        │  „Workshop buchen“     │
+        └───────────────────────►│   (Termin, Sprache, Theme per Link)
+                                 │
+   nutzen Rechenbausteine aus shared/
+        │                        │
+        ▼                        ▼
+  landing-engagement.js     company-bookings.js
+  chat-intents.js           tenant-report.js
+                            workshop-countdown.js
+                            share-links.js
+                            certificate.js
+
+ tests/runner.html  ──►  prüft alle Bausteine in shared/ mit den *.test.js
+```
+
+Die Seiten zeigen etwas an und nehmen Eingaben entgegen. Die Rechenbausteine in `shared/` entscheiden, was richtig ist (z. B. „ist diese E-Mail gültig?“ oder „wie viele Tage sind es noch?“). Die Tests prüfen nur diese Bausteine.
+
+## 2. Alle Dateien im Überblick
+
+| Datei | Zweck in einem Satz |
+|---|---|
+| `Landingpage/index.html` | Startseite für Besucher |
+| `Landingpage/hero-grafik.svg` | Tacho-Grafik im oberen Bereich der Startseite |
+| `Landingpage/hero-ohne-frau.jpg` | Hintergrundbild der Startseite |
+| `Firmen Dashboard/firmen-dashboard.html` | Verwaltungsseite der Firma |
+| `Firmen Dashboard/hintergrund.jpg` | Hintergrundbild des Dashboards |
+| `translations.js` | Alle Texte auf Deutsch und Englisch, plus Sprachumschaltung |
+| `shared/company-bookings.js` | Regeln für Buchungen und Teilnehmer, Firmenname |
+| `shared/tenant-report.js` | Prüfung der hochgeladenen Report-Datei |
+| `shared/workshop-countdown.js` | Rechnet die Tage bis zum Workshop aus |
+| `shared/share-links.js` | Baut die Teilen-Links für soziale Netzwerke |
+| `shared/certificate.js` | Zertifikat: Freigabe, Dateiname, PDF-Erzeugung |
+| `shared/landing-engagement.js` | Regeln für Gratis-Check und Sternebewertung |
+| `shared/chat-intents.js` | Entscheidet, welche Antwort der Chatbot gibt |
+| `tests/runner.html` | Startet alle Tests im Browser und zeigt das Ergebnis |
+| `tests/*.test.js` (7 Dateien) | Die eigentlichen Tests, je eine pro Baustein |
+| `README.md` | Kurzanleitung zum Projekt |
+| `Projektdokumentation.md` | Ausführliche Dokumentation, auch für Laien |
+| `Dateiuebersicht.md` | Diese Datei |
+
+## 3. Die Seiten
+
+### `Landingpage/index.html`
+Die Startseite, mit der Besucher beginnen. Sie enthält den Kopf mit Navigation, Sprach- und Theme-Schalter, den Hero-Bereich, die zwei Workshop-Karten, den Abschnitt „So geht es weiter“, Gratis-Check, Feedback, Kontaktband und den Chatbot. Aussehen (CSS) und Seitenlogik (JavaScript) stehen direkt in dieser Datei.
+
+- **Bindet ein:** `translations.js`, `shared/landing-engagement.js`, `shared/chat-intents.js`.
+- **Nutzt als Bilder:** `hero-grafik.svg` und `hero-ohne-frau.jpg` aus dem eigenen Ordner.
+- **Verbindung zum Dashboard:** „Workshop buchen“ öffnet das Dashboard und hängt Termin, Sprache und Theme an den Link (`?course=…&lang=…&theme=…`).
+- **Speichert im Browser:** Gratis-Check-Anfragen, Feedback und das gewählte Theme.
+
+### `Landingpage/hero-grafik.svg`
+Eine Vektorgrafik (Tacho) im Hero-Bereich. Sie scrollt mit und ist zu 60 % sichtbar. Wird nur von `index.html` genutzt.
+
+### `Landingpage/hero-ohne-frau.jpg`
+Das feste Hintergrundbild der Startseite. Der Name verweist darauf, dass die Person am rechten Rand entfernt wurde. Wird nur von `index.html` genutzt.
+
+### `Firmen Dashboard/firmen-dashboard.html`
+Die Seite, die nach „Workshop buchen“ erscheint. Sie enthält Begrüßung, Countdown, Buchungskarten mit Teilnehmerliste und Zertifikat-Button, Tenant-Check-Upload und die Teilen-Leiste am Rand. Aussehen und Seitenlogik stehen ebenfalls in der Datei selbst.
+
+- **Bindet ein:** `translations.js`, `shared/company-bookings.js`, `shared/tenant-report.js`, `shared/workshop-countdown.js`, `shared/share-links.js`, `shared/certificate.js`.
+- **Nutzt als Bild:** `hintergrund.jpg` aus dem eigenen Ordner.
+- **Verbindung zur Landingpage:** Der Link „Abmelden“ führt zurück.
+- **Speichert im Browser:** Buchungen und Teilnehmer, das gewählte Theme.
+- **Ablauf beim Öffnen:** Gespeicherte Buchungen laden, den übergebenen Termin automatisch buchen, alles anzeigen. Bei jeder Änderung wird alles neu gezeichnet: Begrüßung, Countdown, Buchungskarten und Teilen-Leiste.
+
+### `Firmen Dashboard/hintergrund.jpg`
+Dezentes Hintergrundbild hinter dem Dashboard. Es scheint durch ein 90-prozentiges Overlay hindurch.
+
+## 4. Texte und Sprache
+
+### `translations.js`
+Die einzige Datei mit sichtbaren Texten, getrennt nach Deutsch und Englisch. Beide Seiten binden sie ein. In den Seiten steht ein Textschlüssel (z. B. `courseAction`), und die Datei liefert den passenden Text. Sie schaltet auch die Sprache um und merkt sich die Wahl.
+
+Wer einen Text ändern will, ändert ihn hier, nicht in den Seiten. Neue Texte müssen in beiden Sprachen angelegt werden.
+
+## 5. Die Rechenbausteine in `shared/`
+
+Diese Dateien greifen weder auf Seitenelemente zu noch zeichnen sie etwas. Sie bekommen Werte, rechnen und liefern ein Ergebnis. Deshalb lassen sie sich automatisch testen. Jede Datei hat genau eine Testdatei.
+
+| Baustein | Genutzt von | Getestet durch | Was er kann |
+|---|---|---|---|
+| `company-bookings.js` | Dashboard | `company-bookings.test.js` | Termin buchen und stornieren, Teilnehmer anmelden und entfernen (Name nötig, E-Mail gültig und nicht doppelt, höchstens 20), freie Plätze zählen, Firmenname aus der E-Mail-Domain ableiten |
+| `tenant-report.js` | Dashboard | `tenant-report.test.js` | Prüft, ob eine Datei `.csv`, `.xlsx` oder `.xls` ist, nicht leer und höchstens 5 MB. Formatiert die Dateigröße für die Anzeige |
+| `workshop-countdown.js` | Dashboard | `workshop-countdown.test.js` | Findet den nächsten Starttermin, rechnet die Tage bis dahin aus (nie negativ, auch bei Zeitumstellung korrekt) und teilt Restzeit in Tage, Stunden, Minuten, Sekunden |
+| `share-links.js` | Dashboard | `share-links.test.js` | Baut Links für Facebook und LinkedIn und den Teilen-Text auf Deutsch und Englisch. Instagram kennt keinen Link, dafür liefert der Baustein die Startseite |
+| `certificate.js` | Dashboard | `certificate.test.js` | Sagt, ob das Zertifikat schon verfügbar ist (ab Workshop-Beginn), bildet den Dateinamen und baut aus einem Bild ein PDF |
+| `landing-engagement.js` | Landingpage | `landing-engagement.test.js` | Prüft die Gratis-Check-Eingaben, prüft die Sternezahl (1–5) und berechnet den Durchschnitt |
+| `chat-intents.js` | Landingpage | `chat-intents.test.js` | Ordnet eine Chat-Frage einem Thema zu und liefert den Schlüssel der passenden Antwort. Ohne Treffer kommt die Fallback-Antwort |
+
+Zusammenspiel am Beispiel des Zertifikats: Das Dashboard zeichnet das Zertifikat selbst auf eine Zeichenfläche und wandelt sie in ein Bild um. `certificate.js` macht daraus das PDF und den Dateinamen und sagt dem Dashboard, ob der Button aktiv sein darf. Alle Texte darauf kommen aus `translations.js`.
+
+Der Chatbot funktioniert ähnlich: Die Landingpage gibt die Frage an `chat-intents.js` und erhält einen Textschlüssel. Den Text dazu holt sie aus `translations.js`.
+
+## 6. Die Tests
+
+### `tests/runner.html`
+Öffnen Sie diese Datei im Browser, um alle Tests zu starten. Sie lädt jeden Baustein aus `shared/` und danach jede Testdatei. Die Ergebnisse stehen als PASS oder FAIL auf der Seite, und der Titel zeigt „ALLE TESTS BESTANDEN“ oder „TESTS FEHLGESCHLAGEN“. Sie enthält eine kleine eigene Prüffunktion, damit keine Test-Bibliothek nötig ist.
+
+### `tests/*.test.js`
+Je eine Testdatei pro Baustein: `company-bookings`, `tenant-report`, `landing-engagement`, `chat-intents`, `workshop-countdown`, `share-links`, `certificate`. Jeder Test beschreibt ein erwartetes Verhalten in einem Satz, z. B. „der 21. Teilnehmer wird abgelehnt“. Neue Bausteine brauchen eine Testdatei und einen Eintrag im Runner.
+
+Reihenfolge der Arbeit: erst den Test schreiben, dann den Baustein, damit er besteht (TDD).
+
+## 7. Die Dokumentation
+
+| Datei | Für wen | Inhalt |
+|---|---|---|
+| `README.md` | Alle, die schnell starten wollen | Struktur, Starten, Tests, Funktionsliste, Einschränkungen |
+| `Projektdokumentation.md` | Alle, auch ohne Vorwissen | Erklärung in einfachen Worten, Glossar, Seiten, Bausteine, Datenhaltung, offene Punkte, Verlauf |
+| `Dateiuebersicht.md` | Alle, die sich in den Dateien zurechtfinden wollen | Diese Datei |
+
+## 8. Wo liegt was beim Ändern?
+
+| Ich möchte … | Dann ändere ich … |
+|---|---|
+| einen Text ändern | `translations.js` (Deutsch und Englisch) |
+| einen Workshop-Termin ändern | In beiden Seiten die Termine: `COURSES` im Dashboard, Workshop-Karten und Hero-Liste auf der Landingpage, dazu die Datumstexte in `translations.js` |
+| die Startzeit ändern | `WORKSHOP_START_HOUR` im Dashboard |
+| die Teilnehmergrenze ändern | `MAX_PARTICIPANTS` in `shared/company-bookings.js` (Test anpassen) |
+| erlaubte Dateitypen oder Größe des Reports ändern | `shared/tenant-report.js` (Test anpassen) |
+| eine neue Chatbot-Frage ergänzen | `shared/chat-intents.js` und die Antworttexte in `translations.js` (Test ergänzen) |
+| das Zertifikat gestalten | Funktion `drawCertificate` im Dashboard und die Zertifikat-Texte in `translations.js` |
+| die Farben ändern | CSS-Variablen am Anfang der jeweiligen Seite (Theme-Abschnitt) |
+| ein Hintergrundbild tauschen | `hero-ohne-frau.jpg` oder `hintergrund.jpg` ersetzen, Dateiname beibehalten |
+
+## 9. Gespeicherte Daten
+
+Alles bleibt im Browser des Besuchers (`localStorage`) und wird nirgends hingesendet.
+
+| Schlüssel | Geschrieben von | Inhalt |
+|---|---|---|
+| `seyItCompanyBookings` | Dashboard | Buchungen mit Teilnehmern |
+| `seyItFreeCheckRequests` | Landingpage | Gratis-Check-Anfragen |
+| `seyItFeedback` | Landingpage | Sternebewertungen und Kommentare |
+| `seyItTheme` | Beide Seiten | Dark oder Light |
+
+Die Sprache und das Theme werden zusätzlich über den Seitenlink weitergegeben, damit sie beim Wechsel zwischen den Seiten erhalten bleiben.
+
+## 10. Hinweis
+
+Der leere Ordner `Anmelde Page` ist ein Rest einer gelöschten Seite. Er ist von Windows gesperrt und muss von Hand gelöscht werden. Er wird von nichts verwendet.

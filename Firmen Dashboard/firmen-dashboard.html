@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sey-IT - Firmen-Dashboard</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --page-bg: #26292e;
+            --surface: rgba(52, 56, 63, 0.64);
+            --surface-muted: rgba(64, 54, 47, 0.62);
+            --input-bg: rgba(38, 41, 46, 0.74);
+            --text: #c8c8c8;
+            --muted: #c8c8c8;
+            --border: rgba(255, 255, 255, 0.15);
+            --field-border: rgba(255, 255, 255, 0.27);
+            --accent-text: #ffad70;
+            --button-bg: #ff6600;
+            --button-hover: #e05500;
+            --button-text: #241a13;
+            --alert-bg: rgba(74, 47, 49, 0.78);
+            --alert-text: #ffb4ab;
+            --track: rgba(255, 255, 255, 0.14);
+            --background-overlay: rgba(38, 41, 46, 0.9);
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --page-bg: #ffffff;
+            --surface: rgba(255, 255, 255, 0.72);
+            --surface-muted: rgba(255, 241, 229, 0.78);
+            --input-bg: rgba(255, 255, 255, 0.78);
+            --text: #333333;
+            --muted: #666666;
+            --border: rgba(38, 41, 46, 0.16);
+            --field-border: rgba(38, 41, 46, 0.27);
+            --accent-text: #a8440a;
+            --alert-bg: rgba(255, 235, 233, 0.86);
+            --alert-text: #9d2525;
+            --track: rgba(38, 41, 46, 0.12);
+            --background-overlay: rgba(242, 244, 247, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--page-bg);
+            background-image: radial-gradient(ellipse at 15% 8%, rgba(255, 102, 0, 0.13), transparent 38%), linear-gradient(var(--background-overlay), var(--background-overlay)), url("hintergrund.jpg");
+            background-position: center, center, center;
+            background-size: auto, auto, cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: var(--surface);
+            padding: 14px 18px;
+            margin-bottom: 30px;
+            border-radius: 6px;
+            border-bottom: 2px solid #ff6600;
+            backdrop-filter: blur(14px);
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header a {
+            color: var(--accent-text);
+        }
+
+        .brand-logo {
+            display: block;
+            width: min(190px, 100%);
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .mode-switch {
+            position: relative;
+            display: block;
+            width: 64px;
+            height: 36px;
+            padding: 0;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(127, 127, 127, 0.3);
+            color: var(--text);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+
+        .mode-switch:hover {
+            border-color: #ff6600;
+        }
+
+        .mode-switch:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        a:focus-visible {
+            outline: 2px solid #ff6600;
+            outline-offset: 2px;
+        }
+
+        .switch-symbol {
+            position: absolute;
+            z-index: 2;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translateY(-50%);
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
+        }
+
+        .switch-left {
+            left: 6px;
+        }
+
+        .switch-right {
+            right: 6px;
+        }
+
+        .flag-icon.switch-symbol {
+            width: 20px;
+            height: 14px;
+            border-radius: 2px;
+        }
+
+        .switch-thumb {
+            position: absolute;
+            z-index: 1;
+            top: 3px;
+            left: 3px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+            transition: transform 0.22s ease;
+            pointer-events: none;
+        }
+
+        .mode-switch[aria-checked="true"] .switch-thumb {
+            transform: translateX(28px);
+        }
+
+        .welcome-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            padding: 24px;
+            margin-bottom: 30px;
+            background: var(--surface);
+            border-left: 5px solid #ff6600;
+            backdrop-filter: blur(14px);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent-text);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .welcome-panel h2 {
+            margin: 0 0 8px;
+            font-size: 1.7rem;
+        }
+
+        .welcome-panel p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .countdown {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .countdown[hidden],
+        .countdown-note[hidden],
+        .countdown-headline[hidden],
+        .countdown-target[hidden] {
+            display: none;
+        }
+
+        .countdown-headline {
+            color: var(--accent-text);
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .countdown p {
+            margin: 0;
+            font-size: 0.82rem;
+        }
+
+        .share-bar {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(-50%);
+            box-shadow: -2px 4px 14px rgba(0, 0, 0, 0.35);
+        }
+
+        .share-bar[hidden] {
+            display: none;
+        }
+
+        .share-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: #ff6600;
+            color: #fff;
+            transition: background 0.15s ease, width 0.15s ease;
+        }
+
+        .share-link + .share-link {
+            border-top: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        .share-link:hover,
+        .share-link:focus-visible {
+            width: 58px;
+            background: #e55a00;
+            outline: none;
+        }
+
+        .share-link svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .share-status {
+            position: fixed;
+            right: 64px;
+            bottom: 24px;
+            z-index: 20;
+            max-width: 320px;
+            padding: 12px 16px;
+            border-left: 4px solid #ff6600;
+            background: var(--surface-muted);
+            color: var(--text);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+        }
+
+        .share-status[hidden] {
+            display: none;
+        }
+
+        .booking-notice {
+            margin: -12px 0 28px;
+            padding: 16px 20px;
+            border-left: 4px solid #ff6600;
+            background: var(--surface-muted);
+        }
+
+        .booking-notice[hidden],
+        .empty-note[hidden],
+        .form-error[hidden] {
+            display: none;
+        }
+
+        .booking-notice p {
+            margin: 4px 0;
+            color: var(--muted);
+        }
+
+        .booking-notice strong {
+            color: var(--text);
+        }
+
+        h2.section-title {
+            margin: 32px 0 16px;
+            color: var(--accent-text);
+            font-size: 1.4rem;
+        }
+
+        .empty-note {
+            color: var(--muted);
+        }
+
+        .booking-card {
+            margin-bottom: 18px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-top: 3px solid #ff6600;
+            border-radius: 6px;
+            background: var(--surface);
+            backdrop-filter: blur(14px);
+        }
+
+        .booking-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .booking-card h3 {
+            margin: 0 0 6px;
+            font-size: 1.2rem;
+        }
+
+        .seat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .seat-bar {
+            height: 8px;
+            margin: 10px 0 18px;
+            border-radius: 999px;
+            background: var(--track);
+            overflow: hidden;
+        }
+
+        .seat-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: #ff6600;
+            transition: width 0.3s ease;
+        }
+
+        .participant-list {
+            margin: 0 0 16px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .participant-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .participant-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .participant-actions .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .participant-list small {
+            display: block;
+            color: var(--muted);
+        }
+
+        .participant-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .participant-form label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .participant-form input {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 12px;
+            border: 1px solid var(--field-border);
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .participant-form input:disabled,
+        .participant-form button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-error {
+            margin: 10px 0 0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--alert-bg);
+            color: var(--alert-text);
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            min-height: 42px;
+            padding: 9px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--button-bg);
+            color: var(--button-text);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--button-hover);
+        }
+
+        .btn-secondary {
+            min-height: 34px;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: #ff6600;
+            background: transparent;
+        }
+
+        .course-offers {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .course-offer {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+        }
+
+        .course-offer strong {
+            font-size: 1.05rem;
+        }
+
+        .tenant-section {
+            padding: 22px;
+            border: 1px solid var(--border);
+            border-left: 4px solid #ff6600;
+            border-radius: 6px;
+            background: var(--surface);
+            backdrop-filter: blur(14px);
+        }
+
+        .tenant-section p {
+            margin: 0 0 12px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .tenant-section h3 {
+            margin: 16px 0 8px;
+            font-size: 1.05rem;
+        }
+
+        .tenant-steps {
+            margin: 0 0 20px;
+            padding-left: 22px;
+            line-height: 1.7;
+        }
+
+        .tenant-upload {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .tenant-upload label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tenant-upload input[type="file"] {
+            max-width: 100%;
+            padding: 8px;
+            border: 1px dashed var(--field-border);
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text);
+            font: inherit;
+        }
+
+        .tenant-hint {
+            font-size: 0.82rem;
+        }
+
+        .tenant-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            background: var(--surface-muted);
+        }
+
+        .tenant-result[hidden] {
+            display: none;
+        }
+
+        .demo-note {
+            margin-top: 30px;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 640px) {
+            .welcome-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .participant-form,
+            .course-offers {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body data-title-key="companyTitle">
+    <div class="dashboard-container">
+        <header>
+            <h1><img class="brand-logo" src="https://sey-it.com/static/img/logo/seyit-logo-white.svg" alt="sey-IT"></h1>
+            <div class="user-info">
+                <span data-i18n="loggedInAs">Angemeldet als</span>
+                <strong id="displayName">Firma</strong>
+                <button class="mode-switch language-switch" id="languageToggle" type="button" role="switch" aria-checked="false" onclick="seyItI18n.toggleLanguage()" aria-label="Sprache" title="Auf Englisch wechseln">
+                    <svg class="flag-icon switch-symbol switch-left" data-language-flag="de" viewBox="0 0 24 16" aria-hidden="true" focusable="false"><rect width="24" height="5.34" fill="#000"></rect><rect y="5.33" width="24" height="5.34" fill="#dd0000"></rect><rect y="10.66" width="24" height="5.34" fill="#ffce00"></rect></svg>
+                    <svg class="flag-icon switch-symbol switch-right" data-language-flag="en" viewBox="0 0 24 16" aria-hidden="true" focusable="false"><rect x="0.5" y="0.5" width="23" height="15" rx="1.5" fill="#fff" stroke="#c6c6c6"></rect><path d="M10 0h4v6h10v4H14v6h-4v-6H0V6h10z" fill="#c8102e"></path></svg>
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                </button>
+                <button class="mode-switch theme-switch" id="themeToggle" type="button" role="switch" aria-checked="true" onclick="toggleTheme()" aria-label="Darstellungsmodus" title="Zum hellen Design wechseln">
+                    <svg class="control-icon switch-symbol switch-left" data-theme-icon="light" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+                    <svg class="control-icon switch-symbol switch-right" data-theme-icon="dark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"></path></svg>
+                    <span class="switch-thumb" aria-hidden="true"></span>
+                </button>
+                <a id="logoutLink" href="../Landingpage/index.html" data-i18n="logout">Abmelden</a>
+            </div>
+        </header>
+
+        <section class="welcome-panel" aria-labelledby="welcomeTitle">
+            <div>
+                <p class="eyebrow" data-i18n="companyArea">FIRMEN-DASHBOARD</p>
+                <h2 id="welcomeTitle"><span id="timeGreeting">Hallo</span>, <span id="welcomeName">Firma</span>!</h2>
+                <p data-i18n="companyWelcome">Verwalten Sie hier Ihre Workshop-Buchung und melden Sie bis zu 20 Teilnehmer an.</p>
+            </div>
+            <div class="countdown" id="countdown" role="timer" aria-live="off">
+                <p class="countdown-headline" id="countdownHeadline"></p>
+                <p class="countdown-target" id="countdownTarget"></p>
+                <p class="countdown-note" id="countdownNote" hidden></p>
+            </div>
+        </section>
+
+        <section class="booking-notice" id="bookingNotice" aria-live="polite" hidden>
+            <p class="eyebrow" data-i18n="companyJustBooked">Ausgewähltes Training wurde zu Ihren Buchungen hinzugefügt:</p>
+            <p><strong id="bookingTrainingName"></strong></p>
+        </section>
+
+        <h2 class="section-title" data-i18n="companyBookingsHeading">Ihre Workshop-Buchung</h2>
+        <p class="empty-note" id="noBookings" data-i18n="companyNoBookings" hidden>Noch kein Workshop gebucht. Buchen Sie ihn unten.</p>
+        <div id="bookingList"></div>
+
+        <h2 class="section-title" id="bookMoreHeading" data-i18n="companyBookMoreHeading">Workshop buchen</h2>
+        <div class="course-offers" id="courseOffers"></div>
+
+        <h2 class="section-title" data-i18n="tenantHeading">Tenant-Check: Report hochladen</h2>
+        <section class="tenant-section" aria-labelledby="tenantHeading">
+            <p data-i18n="tenantIntro">Für den Tenant-Check benötigen wir den Produktreport Ihres Microsoft-365-Tenants inklusive Laufzeiten.</p>
+            <h3 id="tenantHeading" data-i18n="tenantStepsHeading">So erhalten Sie den Report</h3>
+            <ol class="tenant-steps">
+                <li data-i18n="tenantStep1">Melden Sie sich im Microsoft 365 Admin Center an.</li>
+                <li data-i18n="tenantStep2">Öffnen Sie „Abrechnung“ ► „Ihre Produkte“.</li>
+                <li data-i18n="tenantStep3">Klicken Sie auf „In CSV exportieren“.</li>
+                <li data-i18n="tenantStep4">Die Datei heißt z. B. Products_2026-05-27T11_24_34+02_00.csv. Laden Sie genau diese Datei hier hoch.</li>
+            </ol>
+            <form class="tenant-upload" id="tenantForm" novalidate>
+                <div>
+                    <label for="tenantFile" data-i18n="tenantDropLabel">CSV- oder Excel-Datei auswählen</label>
+                    <input id="tenantFile" type="file" accept=".csv,.xlsx,.xls">
+                </div>
+                <button class="btn" type="submit" data-i18n="tenantUploadButton">Report bereitstellen</button>
+            </form>
+            <p class="tenant-hint" data-i18n="tenantDropHint">Erlaubt: .csv, .xlsx, .xls – maximal 5 MB</p>
+            <p class="form-error" id="tenantError" role="alert" hidden></p>
+            <div class="tenant-result" id="tenantResult" aria-live="polite" hidden>
+                <span><span data-i18n="tenantUploaded">Report bereitgestellt:</span> <strong id="tenantFileName"></strong></span>
+                <button class="btn btn-secondary" id="tenantRemove" type="button" data-i18n="tenantRemoveFile">Datei entfernen</button>
+            </div>
+            <p class="tenant-hint" data-i18n="tenantDemoNote">Demo: Die Datei wird nicht hochgeladen oder gespeichert.</p>
+        </section>
+
+        <p class="demo-note" data-i18n="companyDemoNote">Demo: Buchungen werden nur lokal in diesem Browser gespeichert und nicht an sey-IT übermittelt.</p>
+    </div>
+
+    <nav class="share-bar" id="shareBar" data-i18n-aria-label="shareBarLabel" aria-label="Teilen" hidden>
+        <a class="share-link" id="shareFacebook" href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" data-i18n-aria-label="shareFacebook" aria-label="Auf Facebook teilen">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="3.5" fill="#fff"></rect><path fill="#ff6600" d="M13.2 21v-6.8h2.3l.4-2.7h-2.7V9.8c0-.8.2-1.3 1.3-1.3h1.4V6.1c-.2 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5v2H8.2v2.7h2.3V21z"></path></svg>
+        </a>
+        <a class="share-link" id="shareInstagram" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" data-i18n-aria-label="shareInstagram" aria-label="Auf Instagram teilen">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="#fff" stroke-width="2"><rect x="3.5" y="3.5" width="17" height="17" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.2" cy="6.8" r="1" fill="#fff" stroke="none"></circle></svg>
+        </a>
+        <a class="share-link" id="shareLinkedIn" href="https://www.linkedin.com/" target="_blank" rel="noopener noreferrer" data-i18n-aria-label="shareLinkedIn" aria-label="Auf LinkedIn teilen">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="#fff"><circle cx="5.5" cy="5.5" r="2.2"></circle><rect x="3.6" y="9" width="3.8" height="12"></rect><path d="M10 9h3.6v1.7c.6-1.1 2-2 3.8-2 3.4 0 4.1 2.2 4.1 5.1V21h-3.8v-6c0-1.4 0-3.1-1.9-3.1s-2.1 1.5-2.1 3V21H10z"></path></svg>
+        </a>
+    </nav>
+    <p class="share-status" id="shareStatus" role="status" hidden></p>
+
+    <script src="../translations.js"></script>
+    <script src="../shared/company-bookings.js"></script>
+    <script src="../shared/tenant-report.js"></script>
+    <script src="../shared/workshop-countdown.js"></script>
+    <script src="../shared/share-links.js"></script>
+    <script src="../shared/certificate.js"></script>
+    <script>
+        const WORKSHOP_START_HOUR = 9;
+        const SHARE_PAGE_URL = 'https://sey-it.com/';
+        let shareText = '';
+        const COURSES = [
+            {id: 'microsoft-licensing-1118', titleKey: 'courseLicensingTitle', dateKey: 'workshopDate1', start: new Date(2026, 10, 18, WORKSHOP_START_HOUR)},
+            {id: 'microsoft-licensing-1125', titleKey: 'courseLicensingTitle', dateKey: 'workshopDate2', start: new Date(2026, 10, 25, WORKSHOP_START_HOUR)}
+        ];
+        const STORAGE_KEY = 'seyItCompanyBookings';
+        const ERROR_KEYS = {
+            invalidName: 'errorInvalidName',
+            invalidEmail: 'errorInvalidEmail',
+            duplicateEmail: 'errorDuplicateEmail',
+            bookingFull: 'errorBookingFull',
+            unknownBooking: 'errorUnknownBooking'
+        };
+        const translate = (key, values) => window.seyItI18n.translate(key, values);
+        const courseById = id => COURSES.find(course => course.id === id);
+
+        let bookings = loadBookings();
+        let formErrors = {};
+
+        function loadBookings() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                return Array.isArray(stored) ? stored.filter(booking => courseById(booking.courseId)) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveBookings() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+            } catch {
+                // Bookings stay available for this visit when storage is unavailable.
+            }
+        }
+
+        function getThemePreference() {
+            const queryTheme = new URLSearchParams(window.location.search).get('theme');
+            if (queryTheme === 'dark' || queryTheme === 'light') return queryTheme;
+
+            try {
+                const savedTheme = localStorage.getItem('seyItTheme');
+                if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+            } catch {
+                return 'dark';
+            }
+
+            return 'dark';
+        }
+
+        function applyTheme(theme, updateUrl = true) {
+            document.documentElement.dataset.theme = theme;
+            window.seyItI18n.refreshControls(document.documentElement.lang);
+            document.querySelector('.brand-logo').src = theme === 'dark'
+                ? 'https://sey-it.com/static/img/logo/seyit-logo-white.svg'
+                : 'https://sey-it.com/static/img/logo/seyit-logo.svg';
+
+            const logoutUrl = new URL('../Landingpage/index.html', window.location.href);
+            logoutUrl.searchParams.set('theme', theme);
+            logoutUrl.searchParams.set('lang', document.documentElement.lang);
+            document.getElementById('logoutLink').href = logoutUrl.href;
+
+            try {
+                localStorage.setItem('seyItTheme', theme);
+            } catch {
+                // The URL carries the theme when browser storage is unavailable.
+            }
+
+            if (updateUrl) {
+                const params = new URLSearchParams(window.location.search);
+                params.set('theme', theme);
+                window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+            }
+        }
+
+        function toggleTheme() {
+            applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+        }
+
+        function updateWelcome() {
+            const name = new URLSearchParams(window.location.search).get('name')
+                || window.seyItBookings.companyNameFromBookings(bookings)
+                || 'Firma';
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('welcomeName').textContent = name;
+            const hour = new Date().getHours();
+            const greeting = hour < 11 ? 'goodMorning' : hour < 18 ? 'goodDay' : 'goodEvening';
+            document.getElementById('timeGreeting').textContent = translate(greeting);
+        }
+
+        function countdownHeadlineKey(days) {
+            if (days === 0) return 'countdownToday';
+            return days === 1 ? 'countdownOneDay' : 'countdownManyDays';
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const bookedStarts = bookings.map(booking => courseById(booking.courseId).start);
+            const nextStart = window.seyItCountdown.findNextStart(bookedStarts, now);
+            const headline = document.getElementById('countdownHeadline');
+            const note = document.getElementById('countdownNote');
+            const target = document.getElementById('countdownTarget');
+
+            headline.hidden = !nextStart;
+            target.hidden = !nextStart;
+            note.hidden = Boolean(nextStart);
+
+            if (!nextStart) {
+                note.textContent = translate(bookedStarts.length > 0 ? 'countdownStarted' : 'countdownNoBooking');
+                return;
+            }
+
+            const days = window.seyItCountdown.daysUntil(nextStart, now);
+            headline.textContent = translate(countdownHeadlineKey(days), {days});
+            const course = COURSES.find(candidate => candidate.start.getTime() === nextStart.getTime());
+            target.textContent = `${translate(course.dateKey)} · ${translate('countdownStartTime', {hour: WORKSHOP_START_HOUR})}`;
+        }
+
+        function createElement(tag, options = {}) {
+            const element = document.createElement(tag);
+            if (options.className) element.className = options.className;
+            if (options.text) element.textContent = options.text;
+            if (options.type) element.type = options.type;
+            return element;
+        }
+
+        const CERTIFICATE_CANVAS = {width: 1754, height: 1240};
+        const CERTIFICATE_FONT = '"Segoe UI", Arial, sans-serif';
+
+        function fitText(context, text, maxWidth, startSize, weight) {
+            let size = startSize;
+            context.font = `${weight} ${size}px ${CERTIFICATE_FONT}`;
+            while (context.measureText(text).width > maxWidth && size > 28) {
+                size -= 2;
+                context.font = `${weight} ${size}px ${CERTIFICATE_FONT}`;
+            }
+        }
+
+        function drawCertificate(participant, course) {
+            const {width, height} = CERTIFICATE_CANVAS;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext('2d');
+            const centerX = width / 2;
+            context.textAlign = 'center';
+            context.textBaseline = 'alphabetic';
+
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, width, height);
+            context.strokeStyle = '#ff6600';
+            context.lineWidth = 16;
+            context.strokeRect(48, 48, width - 96, height - 96);
+            context.lineWidth = 3;
+            context.strokeRect(84, 84, width - 168, height - 168);
+
+            context.fillStyle = '#ff6600';
+            context.font = `800 72px ${CERTIFICATE_FONT}`;
+            context.fillText('sey-IT', centerX, 230);
+            context.fillStyle = '#555555';
+            context.font = `600 26px ${CERTIFICATE_FONT}`;
+            context.fillText('G R O U P', centerX, 272);
+
+            context.fillStyle = '#101317';
+            context.font = `800 88px ${CERTIFICATE_FONT}`;
+            context.fillText(translate('certificateTitle').toUpperCase(), centerX, 440);
+            context.fillStyle = '#ff6600';
+            context.fillRect(centerX - 120, 480, 240, 8);
+
+            context.fillStyle = '#555555';
+            context.font = `400 38px ${CERTIFICATE_FONT}`;
+            context.fillText(translate('certificateIntro'), centerX, 590);
+
+            context.fillStyle = '#101317';
+            fitText(context, participant.name, width - 400, 108, 700);
+            context.fillText(participant.name, centerX, 720);
+            context.fillStyle = '#ff6600';
+            context.fillRect(centerX - 380, 756, 760, 4);
+
+            context.fillStyle = '#555555';
+            context.font = `400 38px ${CERTIFICATE_FONT}`;
+            context.fillText(translate('certificateBody'), centerX, 850);
+            context.fillStyle = '#ff6600';
+            fitText(context, translate(course.titleKey), width - 400, 64, 800);
+            context.fillText(translate(course.titleKey), centerX, 940);
+            context.fillStyle = '#101317';
+            context.font = `600 38px ${CERTIFICATE_FONT}`;
+            context.fillText(translate(course.dateKey), centerX, 1005);
+
+            context.fillStyle = '#777777';
+            context.font = `400 28px ${CERTIFICATE_FONT}`;
+            context.fillText(translate('certificateFooter'), centerX, 1120);
+            return canvas;
+        }
+
+        function formatIsoDate(date) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${date.getFullYear()}-${month}-${day}`;
+        }
+
+        async function downloadCertificate(participant, course) {
+            const canvas = drawCertificate(participant, course);
+            const jpegBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+            const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
+            const pdfBytes = window.seyItCertificate.buildPdfFromJpeg(jpegBytes, canvas.width, canvas.height);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([pdfBytes], {type: 'application/pdf'}));
+            link.download = window.seyItCertificate.buildFileName(participant.name, formatIsoDate(course.start));
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+        }
+
+        function renderCertificateButton(participant, course) {
+            const isAvailable = window.seyItCertificate.isCertificateAvailable(course.start, new Date());
+            const button = createElement('button', {
+                className: 'btn',
+                type: 'button',
+                text: translate(isAvailable ? 'certificateDownload' : 'certificateLocked')
+            });
+            button.disabled = !isAvailable;
+            button.dataset.certificateButton = participant.email;
+            if (isAvailable) button.addEventListener('click', () => downloadCertificate(participant, course));
+            return button;
+        }
+
+        function renderParticipantForm(booking) {
+            const isFull = window.seyItBookings.remainingSeats(booking) <= 0;
+            const form = createElement('form', {className: 'participant-form'});
+            form.noValidate = true;
+
+            [['name', 'text', 'companyParticipantName', 'name'], ['email', 'email', 'companyParticipantEmail', 'email']].forEach(([field, type, labelKey, autocomplete]) => {
+                const group = createElement('div');
+                const inputId = `${field}-${booking.courseId}`;
+                const label = createElement('label', {text: translate(labelKey)});
+                label.htmlFor = inputId;
+                const input = createElement('input', {type});
+                input.id = inputId;
+                input.name = field;
+                input.autocomplete = autocomplete;
+                input.disabled = isFull;
+                group.append(label, input);
+                form.appendChild(group);
+            });
+
+            const submit = createElement('button', {className: 'btn', type: 'submit', text: translate('companyAddParticipant')});
+            submit.disabled = isFull;
+            form.appendChild(submit);
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const data = new FormData(form);
+                const result = window.seyItBookings.addParticipant(bookings, booking.courseId, {
+                    name: data.get('name'),
+                    email: data.get('email')
+                });
+                if (result.ok) {
+                    bookings = result.bookings;
+                    delete formErrors[booking.courseId];
+                    saveBookings();
+                } else {
+                    formErrors[booking.courseId] = result.error;
+                }
+                render();
+            });
+            return form;
+        }
+
+        function createParticipantActions(...buttons) {
+            const actions = createElement('div', {className: 'participant-actions'});
+            actions.append(...buttons);
+            return actions;
+        }
+
+        function renderBookingCard(booking) {
+            const {MAX_PARTICIPANTS, remainingSeats} = window.seyItBookings;
+            const course = courseById(booking.courseId);
+            const card = createElement('article', {className: 'booking-card'});
+            card.dataset.courseId = booking.courseId;
+
+            const header = createElement('div', {className: 'booking-card-header'});
+            const heading = createElement('div');
+            heading.appendChild(createElement('h3', {text: translate(course.titleKey)}));
+            const seatText = remainingSeats(booking) <= 0
+                ? translate('companyFull')
+                : translate('companySeatsUsed', {count: booking.participants.length, max: MAX_PARTICIPANTS});
+            heading.appendChild(createElement('span', {className: 'seat-label', text: `${translate(course.dateKey)} · ${seatText}`}));
+            const cancel = createElement('button', {className: 'btn btn-secondary', type: 'button', text: translate('companyCancelBooking')});
+            cancel.addEventListener('click', () => {
+                bookings = window.seyItBookings.removeBooking(bookings, booking.courseId);
+                delete formErrors[booking.courseId];
+                saveBookings();
+                render();
+            });
+            header.append(heading, cancel);
+
+            const bar = createElement('div', {className: 'seat-bar'});
+            bar.setAttribute('role', 'progressbar');
+            bar.setAttribute('aria-valuemin', '0');
+            bar.setAttribute('aria-valuemax', String(MAX_PARTICIPANTS));
+            bar.setAttribute('aria-valuenow', String(booking.participants.length));
+            bar.setAttribute('aria-label', translate('companyParticipants'));
+            const fill = createElement('div', {className: 'seat-bar-fill'});
+            fill.style.width = `${(booking.participants.length / MAX_PARTICIPANTS) * 100}%`;
+            bar.appendChild(fill);
+
+            card.append(header, bar);
+
+            if (booking.participants.length === 0) {
+                const empty = createElement('p', {className: 'empty-note', text: translate('companyNoParticipants')});
+                card.appendChild(empty);
+            } else {
+                const list = createElement('ul', {className: 'participant-list'});
+                booking.participants.forEach(participant => {
+                    const item = createElement('li');
+                    const identity = createElement('div');
+                    identity.appendChild(createElement('strong', {text: participant.name}));
+                    identity.appendChild(createElement('small', {text: participant.email}));
+                    const remove = createElement('button', {className: 'btn btn-secondary', type: 'button', text: translate('companyRemoveParticipant')});
+                    remove.addEventListener('click', () => {
+                        bookings = window.seyItBookings.removeParticipant(bookings, booking.courseId, participant.email);
+                        saveBookings();
+                        render();
+                    });
+                    item.append(identity, createParticipantActions(renderCertificateButton(participant, course), remove));
+                    list.appendChild(item);
+                });
+                card.appendChild(list);
+            }
+
+            card.appendChild(renderParticipantForm(booking));
+
+            const error = createElement('p', {className: 'form-error'});
+            error.setAttribute('role', 'alert');
+            const errorCode = formErrors[booking.courseId];
+            error.hidden = !errorCode;
+            if (errorCode) error.textContent = translate(ERROR_KEYS[errorCode]);
+            card.appendChild(error);
+            return card;
+        }
+
+        function renderCourseOffers() {
+            const offers = document.getElementById('courseOffers');
+            offers.replaceChildren();
+            const availableCourses = COURSES.filter(course => !bookings.some(booking => booking.courseId === course.id));
+
+            availableCourses.forEach(course => {
+                const offer = createElement('div', {className: 'course-offer'});
+                offer.appendChild(createElement('strong', {text: translate(course.titleKey)}));
+                offer.appendChild(createElement('span', {className: 'seat-label', text: translate(course.dateKey)}));
+                const book = createElement('button', {className: 'btn', type: 'button', text: translate('companyBookSeminar')});
+                book.addEventListener('click', () => {
+                    bookings = window.seyItBookings.addBooking(bookings, course.id);
+                    saveBookings();
+                    render();
+                });
+                offer.appendChild(book);
+                offers.appendChild(offer);
+            });
+
+            document.getElementById('bookMoreHeading').hidden = availableCourses.length === 0;
+        }
+
+        function updateShareLinks() {
+            const shareBar = document.getElementById('shareBar');
+            const nextStart = window.seyItCountdown.findNextStart(
+                bookings.map(booking => courseById(booking.courseId).start),
+                new Date()
+            );
+            shareBar.hidden = !nextStart;
+            if (!nextStart) return;
+
+            const course = COURSES.find(candidate => candidate.start.getTime() === nextStart.getTime());
+            const language = document.documentElement.lang === 'en' ? 'en' : 'de';
+            const formattedDate = nextStart.toLocaleDateString(language === 'en' ? 'en-GB' : 'de-DE', {day: 'numeric', month: 'long', year: 'numeric'});
+            shareText = window.seyItShare.buildShareText(translate(course.titleKey), formattedDate, language);
+            const links = window.seyItShare.buildShareLinks(shareText, SHARE_PAGE_URL);
+            document.getElementById('shareFacebook').href = links.facebook;
+            document.getElementById('shareInstagram').href = links.instagram;
+            document.getElementById('shareLinkedIn').href = links.linkedin;
+        }
+
+        function setupInstagramShare() {
+            const status = document.getElementById('shareStatus');
+            document.getElementById('shareInstagram').addEventListener('click', async () => {
+                let messageKey = 'shareInstagramCopied';
+                try {
+                    await navigator.clipboard.writeText(shareText);
+                } catch {
+                    messageKey = 'shareInstagramCopyFailed';
+                }
+                status.dataset.messageKey = messageKey;
+                status.textContent = translate(messageKey);
+                status.hidden = false;
+                setTimeout(() => { status.hidden = true; }, 6000);
+            });
+        }
+
+        function bookingsSortedByStart() {
+            return [...bookings].sort(
+                (first, second) => courseById(first.courseId).start - courseById(second.courseId).start
+            );
+        }
+
+        function render() {
+            const list = document.getElementById('bookingList');
+            list.replaceChildren(...bookingsSortedByStart().map(renderBookingCard));
+            document.getElementById('noBookings').hidden = bookings.length > 0;
+            renderCourseOffers();
+            updateWelcome();
+            updateCountdown();
+            updateShareLinks();
+        }
+
+        function applyCourseFromUrl() {
+            const courseId = new URLSearchParams(window.location.search).get('course');
+            const course = courseById(courseId);
+            const notice = document.getElementById('bookingNotice');
+            if (!course) {
+                notice.hidden = true;
+                return;
+            }
+
+            bookings = window.seyItBookings.addBooking(bookings, course.id);
+            saveBookings();
+            document.getElementById('bookingTrainingName').textContent = `${translate(course.titleKey)} – ${translate(course.dateKey)}`;
+        }
+
+        const TENANT_ERROR_KEYS = {
+            noFile: 'errorNoFile',
+            invalidFileType: 'errorInvalidFileType',
+            emptyFile: 'errorEmptyFile',
+            fileTooLarge: 'errorFileTooLarge'
+        };
+
+        function setupTenantUpload() {
+            const form = document.getElementById('tenantForm');
+            const fileInput = document.getElementById('tenantFile');
+            const error = document.getElementById('tenantError');
+            const result = document.getElementById('tenantResult');
+
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const file = fileInput.files[0];
+                const validation = window.seyItTenantReport.validateReportFile(file);
+                error.hidden = validation.ok;
+                result.hidden = !validation.ok;
+
+                if (!validation.ok) {
+                    error.dataset.errorKey = TENANT_ERROR_KEYS[validation.error];
+                    error.textContent = translate(error.dataset.errorKey);
+                    return;
+                }
+
+                const size = window.seyItTenantReport.formatFileSize(file.size);
+                document.getElementById('tenantFileName').textContent = `${file.name} (${size})`;
+            });
+
+            document.getElementById('tenantRemove').addEventListener('click', () => {
+                fileInput.value = '';
+                result.hidden = true;
+            });
+
+            window.addEventListener('languagechange', () => {
+                if (!error.hidden) error.textContent = translate(error.dataset.errorKey);
+            });
+        }
+
+        window.addEventListener('languagechange', () => {
+            const courseId = new URLSearchParams(window.location.search).get('course');
+            const course = courseById(courseId);
+            if (course) document.getElementById('bookingTrainingName').textContent = `${translate(course.titleKey)} – ${translate(course.dateKey)}`;
+            render();
+        });
+
+        applyTheme(getThemePreference(), false);
+        applyCourseFromUrl();
+        render();
+        setupTenantUpload();
+        setupInstagramShare();
+        setInterval(updateCountdown, 60000);
+    </script>
+</body>
+</html>

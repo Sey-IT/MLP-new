@@ -1,0 +1,25 @@
+# Betriebssystem
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Office-Temporärdateien
+~$*
+
+# Abhängigkeiten und Umgebungen
+node_modules/
+venv/
+.venv/
+__pycache__/
+
+# Logs und lokale Dateien
+*.log
+.env
+*.local
+
+# Leerer, gesperrter Ordner
+Anmelde Page/
