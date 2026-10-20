@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>sey-IT QR-Code-Generator</title>
+    <style>
+        body { max-width: 560px; margin: 32px auto; padding: 0 16px; font-family: "Segoe UI", Arial, sans-serif; color: #26292e; }
+        h1 { font-size: 1.4rem; }
+        label { display: block; margin: 16px 0 4px; font-weight: 600; }
+        input, select { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #999; border-radius: 4px; font: inherit; }
+        .preview { display: grid; place-items: center; margin: 20px 0; }
+        .preview svg { width: 280px; height: auto; border: 1px solid #ddd; }
+        .preview text { fill: #000; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        button { padding: 10px 18px; border: 0; border-radius: 4px; background: #ff6600; color: #241a13; font: inherit; font-weight: 700; cursor: pointer; }
+        .hint { color: #555; font-size: 0.9rem; }
+        .error { color: #9d2525; }
+    </style>
+</head>
+<body>
+    <h1>QR-Code für Teilnehmer-Zertifikate</h1>
+    <p class="hint">Trage die Internetadresse ein, unter der das Firmen-Dashboard erreichbar ist (nicht die lokale Datei), und lade den Code für PowerPoint herunter.</p>
+
+    <label for="baseUrl">Adresse des Firmen-Dashboards</label>
+    <input id="baseUrl" type="url" placeholder="https://beispiel.de/Firmen%20Dashboard/firmen-dashboard.html">
+
+    <label for="course">Workshop</label>
+    <select id="course">
+        <option value="microsoft-licensing-1118">Microsoft License Pro Workshop – 18.11.2026</option>
+        <option value="microsoft-licensing-1125">Microsoft License Pro Workshop – 25.11.2026</option>
+    </select>
+
+    <p class="error" id="error" role="alert" hidden></p>
+    <div class="preview" id="preview"></div>
+
+    <div class="actions">
+        <button type="button" id="downloadSvg">SVG herunterladen</button>
+        <button type="button" id="downloadPng">PNG herunterladen</button>
+    </div>
+
+    <script src="../shared/participant-link.js"></script>
+    <script src="../shared/vendor/qrcode.js"></script>
+    <script src="../shared/qr-code.js"></script>
+    <script>
+        const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+        const PNG_SIZE_PX = 1200;
+        const SVG_WIDTH_PX = 1000;
+        const CAPTION_TEXT = 'Hier zum Zertifikat';
+        const CAPTION_HEIGHT_RATIO = 0.2;
+        const baseUrlInput = document.getElementById('baseUrl');
+        const courseSelect = document.getElementById('course');
+        const preview = document.getElementById('preview');
+        const error = document.getElementById('error');
+        let currentSvg = null;
+
+        function createSvg(text) {
+            const {size, path} = window.seyItQr.buildQrPath(text);
+            const captionHeight = size * CAPTION_HEIGHT_RATIO;
+            const totalHeight = size + captionHeight;
+            const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+            svg.setAttribute('xmlns', SVG_NAMESPACE);
+            svg.setAttribute('viewBox', `0 0 ${size} ${totalHeight}`);
+            svg.setAttribute('width', String(SVG_WIDTH_PX));
+            svg.setAttribute('height', String(Math.round(SVG_WIDTH_PX * totalHeight / size)));
+            const background = document.createElementNS(SVG_NAMESPACE, 'rect');
+            background.setAttribute('width', String(size));
+            background.setAttribute('height', String(totalHeight));
+            background.setAttribute('fill', '#ffffff');
+            const caption = document.createElementNS(SVG_NAMESPACE, 'text');
+            caption.textContent = CAPTION_TEXT;
+            caption.setAttribute('x', String(size / 2));
+            caption.setAttribute('y', String(captionHeight * 0.72));
+            caption.setAttribute('text-anchor', 'middle');
+            caption.setAttribute('font-family', 'Segoe UI, Arial, sans-serif');
+            caption.setAttribute('font-weight', '700');
+            caption.setAttribute('font-size', String(captionHeight * 0.5));
+            caption.setAttribute('fill', '#000000');
+            const shape = document.createElementNS(SVG_NAMESPACE, 'path');
+            shape.setAttribute('d', path);
+            shape.setAttribute('fill', '#000000');
+            shape.setAttribute('shape-rendering', 'crispEdges');
+            shape.setAttribute('transform', `translate(0 ${captionHeight})`);
+            svg.append(background, caption, shape);
+            return svg;
+        }
+
+        function update() {
+            currentSvg = null;
+            preview.replaceChildren();
+            error.hidden = true;
+            if (!baseUrlInput.value.trim()) return;
+
+            try {
+                const url = window.seyItParticipantLink.buildParticipantUrl(baseUrlInput.value.trim(), courseSelect.value);
+                currentSvg = createSvg(url);
+                preview.appendChild(currentSvg.cloneNode(true));
+            } catch {
+                error.textContent = 'Bitte eine vollständige Adresse mit https:// eingeben.';
+                error.hidden = false;
+            }
+        }
+
+        function download(blob, fileName) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+        }
+
+        function serializedSvg() {
+            return new Blob([new XMLSerializer().serializeToString(currentSvg)], {type: 'image/svg+xml'});
+        }
+
+        document.getElementById('downloadSvg').addEventListener('click', () => {
+            if (currentSvg) download(serializedSvg(), `QR-Code-${courseSelect.value}.svg`);
+        });
+
+        document.getElementById('downloadPng').addEventListener('click', () => {
+            if (!currentSvg) return;
+            const image = new Image();
+            const svgUrl = URL.createObjectURL(serializedSvg());
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = PNG_SIZE_PX;
+                canvas.height = Math.round(PNG_SIZE_PX * image.height / image.width);
+                const context = canvas.getContext('2d');
+                context.imageSmoothingEnabled = false;
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(svgUrl);
+                canvas.toBlob(blob => download(blob, `QR-Code-${courseSelect.value}.png`), 'image/png');
+            };
+            image.src = svgUrl;
+        });
+
+        baseUrlInput.addEventListener('input', update);
+        courseSelect.addEventListener('change', update);
+    </script>
+</body>
+</html>

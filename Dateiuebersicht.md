@@ -35,20 +35,25 @@ Die Seiten zeigen etwas an und nehmen Eingaben entgegen. Die Rechenbausteine in 
 | Datei | Zweck in einem Satz |
 |---|---|
 | `Landingpage/index.html` | Startseite für Besucher |
-| `Landingpage/hero-grafik.svg` | Tacho-Grafik im oberen Bereich der Startseite |
 | `Landingpage/hero-ohne-frau.jpg` | Hintergrundbild der Startseite |
 | `Firmen Dashboard/firmen-dashboard.html` | Verwaltungsseite der Firma |
 | `Firmen Dashboard/hintergrund.jpg` | Hintergrundbild des Dashboards |
+| `QR-Code/qr-code-generator.html` | Eigenständiges Werkzeug: erzeugt den QR-Code für PowerPoint als SVG oder PNG |
+| `Praesentation/Projekt-MLP.pptx` | Fünfseitige Präsentation im sey-IT-Design |
+| `Praesentation/ablauf-skizze.svg` | Ablaufbild von der Buchung bis zum Zertifikat |
 | `translations.js` | Alle Texte auf Deutsch und Englisch, plus Sprachumschaltung |
 | `shared/company-bookings.js` | Regeln für Buchungen und Teilnehmer, Firmenname |
 | `shared/tenant-report.js` | Prüfung der hochgeladenen Report-Datei |
 | `shared/workshop-countdown.js` | Rechnet die Tage bis zum Workshop aus |
 | `shared/share-links.js` | Baut die Teilen-Links für soziale Netzwerke |
 | `shared/certificate.js` | Zertifikat: Freigabe, Dateiname, PDF-Erzeugung |
+| `shared/participant-link.js` | Teilnehmer-Link (QR-Ziel) und Erfassung privater E-Mail-Adressen |
+| `shared/qr-code.js` | Wandelt einen Text in einen SVG-Pfad für den QR-Code um |
+| `shared/vendor/qrcode.js` | Fremdbibliothek `qrcode-generator` 1.4.4 (MIT-Lizenz, Kazuhiko Arase) |
 | `shared/landing-engagement.js` | Regeln für Gratis-Check und Sternebewertung |
 | `shared/chat-intents.js` | Entscheidet, welche Antwort der Chatbot gibt |
 | `tests/runner.html` | Startet alle Tests im Browser und zeigt das Ergebnis |
-| `tests/*.test.js` (7 Dateien) | Die eigentlichen Tests, je eine pro Baustein |
+| `tests/*.test.js` (9 Dateien) | Die eigentlichen Tests, je eine pro Baustein |
 | `README.md` | Kurzanleitung zum Projekt |
 | `Projektdokumentation.md` | Ausführliche Dokumentation, auch für Laien |
 | `Dateiuebersicht.md` | Diese Datei |
@@ -56,15 +61,12 @@ Die Seiten zeigen etwas an und nehmen Eingaben entgegen. Die Rechenbausteine in 
 ## 3. Die Seiten
 
 ### `Landingpage/index.html`
-Die Startseite, mit der Besucher beginnen. Sie enthält den Kopf mit Navigation, Sprach- und Theme-Schalter, den Hero-Bereich, die zwei Workshop-Karten, den Abschnitt „So geht es weiter“, Gratis-Check, Feedback, Kontaktband und den Chatbot. Aussehen (CSS) und Seitenlogik (JavaScript) stehen direkt in dieser Datei.
+Die Startseite, mit der Besucher beginnen. Sie enthält den Kopf mit Navigation, Sprach- und Theme-Schalter, den Hero-Bereich, die zwei Workshop-Karten, den Abschnitt „So geht es weiter“, Gratis-Check, Feedback, Kontaktband und den Chatbot. Aussehen (CSS) und Seitenlogik (JavaScript) stehen direkt in dieser Datei. Unter dem Logo läuft ein orangefarbener Fortschrittsstreifen, der auch im Dashboard steckt.
 
 - **Bindet ein:** `translations.js`, `shared/landing-engagement.js`, `shared/chat-intents.js`.
-- **Nutzt als Bilder:** `hero-grafik.svg` und `hero-ohne-frau.jpg` aus dem eigenen Ordner.
+- **Nutzt als Bild:** `hero-ohne-frau.jpg` aus dem eigenen Ordner.
 - **Verbindung zum Dashboard:** „Workshop buchen“ öffnet das Dashboard und hängt Termin, Sprache und Theme an den Link (`?course=…&lang=…&theme=…`).
 - **Speichert im Browser:** Gratis-Check-Anfragen, Feedback und das gewählte Theme.
-
-### `Landingpage/hero-grafik.svg`
-Eine Vektorgrafik (Tacho) im Hero-Bereich. Sie scrollt mit und ist zu 60 % sichtbar. Wird nur von `index.html` genutzt.
 
 ### `Landingpage/hero-ohne-frau.jpg`
 Das feste Hintergrundbild der Startseite. Der Name verweist darauf, dass die Person am rechten Rand entfernt wurde. Wird nur von `index.html` genutzt.
@@ -112,7 +114,7 @@ Der Chatbot funktioniert ähnlich: Die Landingpage gibt die Frage an `chat-inten
 Öffnen Sie diese Datei im Browser, um alle Tests zu starten. Sie lädt jeden Baustein aus `shared/` und danach jede Testdatei. Die Ergebnisse stehen als PASS oder FAIL auf der Seite, und der Titel zeigt „ALLE TESTS BESTANDEN“ oder „TESTS FEHLGESCHLAGEN“. Sie enthält eine kleine eigene Prüffunktion, damit keine Test-Bibliothek nötig ist.
 
 ### `tests/*.test.js`
-Je eine Testdatei pro Baustein: `company-bookings`, `tenant-report`, `landing-engagement`, `chat-intents`, `workshop-countdown`, `share-links`, `certificate`. Jeder Test beschreibt ein erwartetes Verhalten in einem Satz, z. B. „der 21. Teilnehmer wird abgelehnt“. Neue Bausteine brauchen eine Testdatei und einen Eintrag im Runner.
+Je eine Testdatei pro Baustein: `company-bookings`, `tenant-report`, `landing-engagement`, `chat-intents`, `workshop-countdown`, `share-links`, `certificate`, `participant-link`, `qr-code`. Jeder Test beschreibt ein erwartetes Verhalten in einem Satz, z. B. „der 21. Teilnehmer wird abgelehnt“. Neue Bausteine brauchen eine Testdatei und einen Eintrag im Runner.
 
 Reihenfolge der Arbeit: erst den Test schreiben, dann den Baustein, damit er besteht (TDD).
 
@@ -150,7 +152,3 @@ Alles bleibt im Browser des Besuchers (`localStorage`) und wird nirgends hingese
 | `seyItTheme` | Beide Seiten | Dark oder Light |
 
 Die Sprache und das Theme werden zusätzlich über den Seitenlink weitergegeben, damit sie beim Wechsel zwischen den Seiten erhalten bleiben.
-
-## 10. Hinweis
-
-Der leere Ordner `Anmelde Page` ist ein Rest einer gelöschten Seite. Er ist von Windows gesperrt und muss von Hand gelöscht werden. Er wird von nichts verwendet.

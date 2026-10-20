@@ -20,6 +20,9 @@
     <script src="../shared/workshop-countdown.js"></script>
     <script src="../shared/share-links.js"></script>
     <script src="../shared/certificate.js"></script>
+    <script src="../shared/participant-link.js"></script>
+    <script src="../shared/vendor/qrcode.js"></script>
+    <script src="../shared/qr-code.js"></script>
     <script>
         const results = document.getElementById('results');
         let failures = 0;
@@ -43,6 +46,8 @@
             countdown: window.seyItCountdown,
             share: window.seyItShare,
             certificate: window.seyItCertificate,
+            participantLink: window.seyItParticipantLink,
+            qr: window.seyItQr,
             assert: {equal: assertEqual, deepEqual: assertEqual, ok: assertTruthy},
             test(name, body) {
                 total++;
@@ -67,6 +72,8 @@
     <script src="workshop-countdown.test.js"></script>
     <script src="share-links.test.js"></script>
     <script src="certificate.test.js"></script>
+    <script src="participant-link.test.js"></script>
+    <script src="qr-code.test.js"></script>
     <script>
         document.getElementById('summary').textContent = `${total - failures}/${total} Tests bestanden`;
         document.title = failures === 0 ? 'ALLE TESTS BESTANDEN' : `${failures} TESTS FEHLGESCHLAGEN`;

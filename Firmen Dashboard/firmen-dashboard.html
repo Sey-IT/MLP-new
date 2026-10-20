@@ -63,10 +63,11 @@
 
         .dashboard-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1100px;
         }
 
         header {
+            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -76,8 +77,24 @@
             padding: 14px 18px;
             margin-bottom: 30px;
             border-radius: 6px;
-            border-bottom: 2px solid #ff6600;
+            border-bottom: 4px solid rgba(255, 102, 0, 0.25);
             backdrop-filter: blur(14px);
+        }
+
+        @keyframes header-progress {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        header::after {
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            height: 4px;
+            width: 100%;
+            background: #ff6600;
+            animation: header-progress 8s linear infinite both;
+            content: "";
         }
 
         header h1 {
@@ -389,6 +406,10 @@
             gap: 8px;
         }
 
+        body.participant-mode [data-company-only] {
+            display: none !important;
+        }
+
         .participant-actions .btn:disabled {
             opacity: 0.55;
             cursor: not-allowed;
@@ -468,6 +489,37 @@
         .btn-secondary:hover:not(:disabled) {
             border-color: #ff6600;
             background: transparent;
+        }
+
+        .offers-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .offers-row > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .offers-row > div:first-child > #bookMoreHeading {
+            margin-top: auto;
+            padding-top: 18px;
+        }
+
+        .offers-row .booking-card {
+            margin-bottom: 0;
+        }
+
+        .offers-row #bookingList {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .offers-row .tenant-section {
+            flex: 1;
         }
 
         .course-offers {
@@ -566,6 +618,12 @@
             font-size: 0.85rem;
         }
 
+        @media (max-width: 900px) {
+            .offers-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 640px) {
             .welcome-panel {
                 flex-direction: column;
@@ -584,8 +642,8 @@
         <header>
             <h1><img class="brand-logo" src="https://sey-it.com/static/img/logo/seyit-logo-white.svg" alt="sey-IT"></h1>
             <div class="user-info">
-                <span data-i18n="loggedInAs">Angemeldet als</span>
-                <strong id="displayName">Firma</strong>
+                <span data-company-only data-i18n="loggedInAs">Angemeldet als</span>
+                <strong data-company-only id="displayName">Teilnehmer</strong>
                 <button class="mode-switch language-switch" id="languageToggle" type="button" role="switch" aria-checked="false" onclick="seyItI18n.toggleLanguage()" aria-label="Sprache" title="Auf Englisch wechseln">
                     <svg class="flag-icon switch-symbol switch-left" data-language-flag="de" viewBox="0 0 24 16" aria-hidden="true" focusable="false"><rect width="24" height="5.34" fill="#000"></rect><rect y="5.33" width="24" height="5.34" fill="#dd0000"></rect><rect y="10.66" width="24" height="5.34" fill="#ffce00"></rect></svg>
                     <svg class="flag-icon switch-symbol switch-right" data-language-flag="en" viewBox="0 0 24 16" aria-hidden="true" focusable="false"><rect x="0.5" y="0.5" width="23" height="15" rx="1.5" fill="#fff" stroke="#c6c6c6"></rect><path d="M10 0h4v6h10v4H14v6h-4v-6H0V6h10z" fill="#c8102e"></path></svg>
@@ -596,14 +654,38 @@
                     <svg class="control-icon switch-symbol switch-right" data-theme-icon="dark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"></path></svg>
                     <span class="switch-thumb" aria-hidden="true"></span>
                 </button>
-                <a id="logoutLink" href="../Landingpage/index.html" data-i18n="logout">Abmelden</a>
+                <a data-company-only id="logoutLink" href="../Landingpage/index.html" data-i18n="logout">Abmelden</a>
             </div>
         </header>
 
+        <section class="booking-card participant-view" id="participantView" aria-labelledby="participantHeading" hidden>
+            <h2 id="participantHeading" data-i18n="participantHeading">Ihr Teilnahmezertifikat</h2>
+            <p class="seat-label" id="participantCourse"></p>
+            <p id="participantIntro" data-i18n="participantIntro">Tragen Sie Ihren Namen und Ihre private oder geschäftliche E-Mail-Adresse ein, um Ihr Zertifikat herunterzuladen.</p>
+            <form class="participant-form" id="participantForm" novalidate>
+                <div>
+                    <label for="participantName" data-i18n="companyParticipantName">Name</label>
+                    <input id="participantName" name="name" type="text" autocomplete="name">
+                </div>
+                <div>
+                    <label for="participantEmail" data-i18n="participantPrivateEmail">Private oder geschäftliche E-Mail-Adresse</label>
+                    <input id="participantEmail" name="email" type="email" autocomplete="email">
+                </div>
+                <button class="btn" type="submit" data-i18n="participantSubmit">Zertifikat anfordern</button>
+            </form>
+            <p class="form-error" id="participantError" role="alert" hidden></p>
+            <div id="participantResult" aria-live="polite" hidden>
+                <p id="participantThanks"></p>
+                <div class="participant-actions" id="participantCertificate"></div>
+            </div>
+            <p class="demo-note" data-i18n="participantDemoNote">Demo: Ihre Eingaben bleiben lokal in diesem Browser.</p>
+        </section>
+
+        <div id="companyView" data-company-only>
         <section class="welcome-panel" aria-labelledby="welcomeTitle">
             <div>
                 <p class="eyebrow" data-i18n="companyArea">FIRMEN-DASHBOARD</p>
-                <h2 id="welcomeTitle"><span id="timeGreeting">Hallo</span>, <span id="welcomeName">Firma</span>!</h2>
+                <h2 id="welcomeTitle"><span id="timeGreeting">Hallo</span>, <span id="welcomeName">Teilnehmer</span>!</h2>
                 <p data-i18n="companyWelcome">Verwalten Sie hier Ihre Workshop-Buchung und melden Sie bis zu 20 Teilnehmer an.</p>
             </div>
             <div class="countdown" id="countdown" role="timer" aria-live="off">
@@ -618,13 +700,17 @@
             <p><strong id="bookingTrainingName"></strong></p>
         </section>
 
+        <div class="offers-row">
+        <div>
         <h2 class="section-title" data-i18n="companyBookingsHeading">Ihre Workshop-Buchung</h2>
         <p class="empty-note" id="noBookings" data-i18n="companyNoBookings" hidden>Noch kein Workshop gebucht. Buchen Sie ihn unten.</p>
         <div id="bookingList"></div>
 
         <h2 class="section-title" id="bookMoreHeading" data-i18n="companyBookMoreHeading">Workshop buchen</h2>
         <div class="course-offers" id="courseOffers"></div>
+        </div>
 
+        <div>
         <h2 class="section-title" data-i18n="tenantHeading">Tenant-Check: Report hochladen</h2>
         <section class="tenant-section" aria-labelledby="tenantHeading">
             <p data-i18n="tenantIntro">Für den Tenant-Check benötigen wir den Produktreport Ihres Microsoft-365-Tenants inklusive Laufzeiten.</p>
@@ -650,11 +736,14 @@
             </div>
             <p class="tenant-hint" data-i18n="tenantDemoNote">Demo: Die Datei wird nicht hochgeladen oder gespeichert.</p>
         </section>
+        </div>
+        </div>
 
         <p class="demo-note" data-i18n="companyDemoNote">Demo: Buchungen werden nur lokal in diesem Browser gespeichert und nicht an sey-IT übermittelt.</p>
+        </div>
     </div>
 
-    <nav class="share-bar" id="shareBar" data-i18n-aria-label="shareBarLabel" aria-label="Teilen" hidden>
+    <nav class="share-bar" id="shareBar" data-company-only data-i18n-aria-label="shareBarLabel" aria-label="Teilen" hidden>
         <a class="share-link" id="shareFacebook" href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" data-i18n-aria-label="shareFacebook" aria-label="Auf Facebook teilen">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="3.5" fill="#fff"></rect><path fill="#ff6600" d="M13.2 21v-6.8h2.3l.4-2.7h-2.7V9.8c0-.8.2-1.3 1.3-1.3h1.4V6.1c-.2 0-1.1-.1-2-.1-2 0-3.4 1.2-3.4 3.5v2H8.2v2.7h2.3V21z"></path></svg>
         </a>
@@ -673,6 +762,7 @@
     <script src="../shared/workshop-countdown.js"></script>
     <script src="../shared/share-links.js"></script>
     <script src="../shared/certificate.js"></script>
+    <script src="../shared/participant-link.js"></script>
     <script>
         const WORKSHOP_START_HOUR = 9;
         const SHARE_PAGE_URL = 'https://sey-it.com/';
@@ -758,7 +848,7 @@
         function updateWelcome() {
             const name = new URLSearchParams(window.location.search).get('name')
                 || window.seyItBookings.companyNameFromBookings(bookings)
-                || 'Firma';
+                || translate('welcomeFallbackName');
             document.getElementById('displayName').textContent = name;
             document.getElementById('welcomeName').textContent = name;
             const hour = new Date().getHours();
@@ -950,6 +1040,80 @@
             const actions = createElement('div', {className: 'participant-actions'});
             actions.append(...buttons);
             return actions;
+        }
+
+        const PARTICIPANT_STORAGE_KEY = 'seyItParticipantRegistrations';
+
+        function loadRegistrations() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(PARTICIPANT_STORAGE_KEY) || '[]');
+                return Array.isArray(stored) ? stored : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveRegistrations(registrations) {
+            try {
+                localStorage.setItem(PARTICIPANT_STORAGE_KEY, JSON.stringify(registrations));
+            } catch {
+                // Registrations stay available for this visit when storage is unavailable.
+            }
+        }
+
+        const participantState = {course: null, participant: null, errorKey: null};
+
+        function renderParticipantView() {
+            const {course, participant, errorKey} = participantState;
+            const form = document.getElementById('participantForm');
+            const error = document.getElementById('participantError');
+            const result = document.getElementById('participantResult');
+
+            document.getElementById('participantCourse').textContent = course
+                ? `${translate(course.titleKey)} · ${translate(course.dateKey)}`
+                : '';
+            form.hidden = !course || Boolean(participant);
+            document.getElementById('participantIntro').hidden = !course || Boolean(participant);
+            error.hidden = !errorKey;
+            error.textContent = errorKey ? translate(errorKey) : '';
+            result.hidden = !participant;
+
+            if (participant) {
+                document.getElementById('participantThanks').textContent = translate('participantThanks', {name: participant.name});
+                document.getElementById('participantCertificate').replaceChildren(renderCertificateButton(participant, course));
+            }
+        }
+
+        function setupParticipantMode(courseId) {
+            document.body.classList.add('participant-mode');
+            document.getElementById('participantView').hidden = false;
+            participantState.course = courseById(courseId) || null;
+            if (!participantState.course) participantState.errorKey = 'participantInvalidLink';
+
+            document.getElementById('participantForm').addEventListener('submit', event => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                const registrations = loadRegistrations();
+                const result = window.seyItParticipantLink.registerParticipant(registrations, courseId, {
+                    name: data.get('name'),
+                    email: data.get('email')
+                });
+                const isKnownEmail = !result.ok && result.error === 'duplicateEmail';
+                if (!result.ok && !isKnownEmail) {
+                    participantState.errorKey = ERROR_KEYS[result.error];
+                } else {
+                    if (result.ok) saveRegistrations(result.registrations);
+                    participantState.errorKey = null;
+                    participantState.participant = {
+                        name: String(data.get('name')).trim(),
+                        email: String(data.get('email')).trim().toLowerCase()
+                    };
+                }
+                renderParticipantView();
+            });
+
+            window.addEventListener('languagechange', renderParticipantView);
+            renderParticipantView();
         }
 
         function renderBookingCard(booking) {
@@ -1154,11 +1318,16 @@
         });
 
         applyTheme(getThemePreference(), false);
-        applyCourseFromUrl();
-        render();
-        setupTenantUpload();
-        setupInstagramShare();
-        setInterval(updateCountdown, 60000);
+        const participantCourseId = window.seyItParticipantLink.courseIdFromSearch(window.location.search);
+        if (participantCourseId !== null) {
+            setupParticipantMode(participantCourseId);
+        } else {
+            applyCourseFromUrl();
+            render();
+            setupTenantUpload();
+            setupInstagramShare();
+            setInterval(updateCountdown, 60000);
+        }
     </script>
 </body>
 </html>

@@ -7,17 +7,24 @@ Kleine, responsive HTML-Demo für die Buchung des „Microsoft License Pro Works
 .
 ├── Landingpage/
 │   ├── index.html
-│   ├── hero-grafik.svg
 │   └── hero-ohne-frau.jpg
 ├── Firmen Dashboard/
 │   ├── firmen-dashboard.html
 │   └── hintergrund.jpg
+├── QR-Code/
+│   └── qr-code-generator.html   (QR-Code für PowerPoint als SVG/PNG erzeugen)
+├── Praesentation/
+│   ├── Projekt-MLP.pptx         (fünfseitige Präsentation im sey-IT-Design)
+│   └── ablauf-skizze.svg        (Ablaufbild von der Buchung bis zum Zertifikat)
 ├── shared/
 │   ├── company-bookings.js      (Buchungslogik, max. 20 Teilnehmer)
 │   ├── tenant-report.js         (Prüfung der Tenant-Report-Datei)
 │   ├── workshop-countdown.js    (Countdown bis zum Workshop-Beginn)
 │   ├── share-links.js           (Teilen-Links für Facebook, Instagram, LinkedIn)
 │   ├── certificate.js           (Zertifikat: Verfügbarkeit, Dateiname, PDF-Erzeugung)
+│   ├── participant-link.js      (Teilnehmer-Link des QR-Codes, Erfassung der E-Mail-Adressen)
+│   ├── qr-code.js               (Text in QR-Code-Pfad umwandeln)
+│   ├── vendor/qrcode.js         (Bibliothek qrcode-generator 1.4.4, MIT)
 │   ├── landing-engagement.js    (Gratis-Check und Sterne-Bewertung)
 │   └── chat-intents.js          (Antwortlogik des Landingpage-Chatbots)
 ├── tests/
@@ -28,6 +35,8 @@ Kleine, responsive HTML-Demo für die Buchung des „Microsoft License Pro Works
 │   ├── workshop-countdown.test.js
 │   ├── share-links.test.js
 │   ├── certificate.test.js
+│   ├── participant-link.test.js
+│   ├── qr-code.test.js
 │   └── runner.html              (Tests im Browser ausführen)
 ├── translations.js
 └── README.md
@@ -49,25 +58,30 @@ Eine Erklärung jeder einzelnen Datei und ihres Zusammenspiels steht in `Dateiue
 - Countdown im Firmen-Dashboard bis zum Beginn des nächsten gebuchten Workshops als Text „Ihr Workshop ist in X Tagen“ (zählt täglich um einen Kalendertag herunter; Beginn 9:00 Uhr als Annahme, Logik in `shared/workshop-countdown.js`). Ohne Buchung erscheint ein Hinweis, nach Beginn eine Meldung.
 - Teilnahmezertifikat im Firmen-Dashboard: Pro angemeldetem Teilnehmer als PDF herunterladbar (A4 quer, im Browser erzeugt). Der Button wird ab Workshop-Beginn aktiv, davor ist er deaktiviert.
 - Teilen-Leiste am rechten Rand des Firmen-Dashboards (Facebook, Instagram, LinkedIn in sey-IT-Orange), sichtbar sobald ein Workshop gebucht ist. Facebook und LinkedIn öffnen den Teilen-Dialog; Instagram bietet keinen Web-Teilen-Link, daher wird der Text kopiert und Instagram geöffnet. Geteilt wird `https://sey-it.com/` mit dem Text zum nächsten gebuchten Workshop.
-- Begrüßung im Firmen-Dashboard: „Guten Tag, Firma!“ passt sich an, sobald ein Teilnehmer angemeldet ist. Der Firmenname wird aus der E-Mail-Domain des ersten Teilnehmers abgeleitet (`anna@muster-software.com` → „Muster Software“). Bei privaten Mail-Anbietern wie gmail.com oder web.de bleibt es bei „Firma“. Ein Parameter `name` in der URL hat Vorrang. Logik in `shared/company-bookings.js`.
+- Begrüßung im Firmen-Dashboard: „Guten Tag, Teilnehmer!“ passt sich an, sobald ein Teilnehmer angemeldet ist. Der Firmenname wird aus der E-Mail-Domain des ersten Teilnehmers abgeleitet (`anna@muster-software.com` → „Muster Software“). Bei privaten Mail-Anbietern wie gmail.com oder web.de bleibt es bei „Teilnehmer“. Ein Parameter `name` in der URL hat Vorrang. Logik in `shared/company-bookings.js`.
 - Firmen-Dashboard: Workshop-Termine einzeln buchen und stornieren, pro Termin bis zu 20 Teilnehmer mit Name und E-Mail anmelden und entfernen, Auslastungsbalken, Prüfung auf ungültige oder doppelte E-Mail-Adressen und volle Buchung
-- Landingpage-Abschnitt „So geht es weiter“ (drei Schritte) direkt unter den Workshop-Karten
-- Tenant-Check im Firmen-Dashboard: Kurzanleitung (M365 Admin Center ► „Ihre Produkte“ ► „In CSV exportieren“) und Upload für CSV/Excel (.csv, .xlsx, .xls, max. 5 MB, Prüfung in `shared/tenant-report.js`; in der Demo wird die Datei nicht übertragen)
-- Landingpage mit zwei getrennt buchbaren Workshops: „Microsoft License Pro Workshop“ am 18.11.2026 und am 25.11.2026 (keine weiteren Schulungen, keine Suche oder Filter)
-- Trust-Leiste mit überprüfbaren Produktfakten (hervorgehobener „Bonus: Kostenloser Check“, 20 Teilnehmer, Demo-Hinweis); der unbelegte „bis zu 10 %“-Wert wurde entfernt
-- Kostenloser Check (Lizenzen und Software) auf der Landingpage mit Validierung; Anfragen werden nur lokal im Browser gespeichert
-- 1–5-Sterne-Feedback mit optionalem Kommentar (per Tastatur bedienbar); Durchschnitt aus den lokal gespeicherten Bewertungen. Logik in `shared/landing-engagement.js`
-- Hero der Landingpage: mitscrollende Tacho-Grafik (`Landingpage/hero-grafik.svg`, 10,5 % aufgehellt) über dem festen Hintergrundbild ohne die Person am rechten Rand (`Landingpage/hero-ohne-frau.jpg`)
+- Landingpage-Abschnitt „So geht es weiter“ (drei Schritte) zwischen der Bonus-Leiste und den Workshops
+- QR-Code für Teilnehmer: Der Generator `QR-Code/qr-code-generator.html` erzeugt einen QR-Code als SVG oder PNG für PowerPoint (Überschrift „Hier zum Zertifikat“, darunter der Code). Er führt auf `firmen-dashboard.html?participant=<Termin-ID>`, eine schlanke Teilnehmer-Seite. Dort tragen Teilnehmer Name und private oder geschäftliche E-Mail-Adresse ein und laden ihr Zertifikat herunter (ab Workshop-Beginn). Das Firmen-Dashboard selbst zeigt keinen QR-Code.
+- Tenant-Check im Firmen-Dashboard rechts neben den Buchungen und Workshops (unten bündig): Kurzanleitung (M365 Admin Center ► „Ihre Produkte“ ► „In CSV exportieren“) und Upload für CSV/Excel (.csv, .xlsx, .xls, max. 5 MB, Prüfung in `shared/tenant-report.js`; in der Demo wird die Datei nicht übertragen)
+- Landingpage mit zwei getrennt buchbaren Workshops: „Microsoft License Pro Workshop“ am 18.11.2026 und am 25.11.2026 (keine weiteren Schulungen, keine Suche oder Filter). Die Karten zeigen eingeklappt Kategorie, Titel und Termin; die Beschreibung klappt beim Darüberfahren aus, „Workshop buchen“ ist immer sichtbar.
+- Trust-Leiste mit der leicht vibrierenden Hervorhebung „Bonus: Kostenloser Check“ und „Bis zu 20 Teilnehmer“
+- Kostenloser Check (Lizenzen und Software) auf der Landingpage rechts neben den Workshop-Karten: Überschrift und Einleitung sind sichtbar, die Eingabefelder klappen beim Darüberfahren oder Fokussieren aus. Anfragen werden nur lokal im Browser gespeichert.
+- 1–5-Sterne-Feedback mit optionalem Kommentar (per Tastatur bedienbar) in voller Breite und einer Zeile; Durchschnitt aus den lokal gespeicherten Bewertungen. Logik in `shared/landing-engagement.js`
+- Hero der Landingpage: Slogan „ready → steady → sey-IT“ mit orangefarbenen Kreislauf-Pfeilen, 10° gedreht, rechts im Hero; die Tacho-Grafik wurde entfernt. Hintergrundbild ohne die Person am rechten Rand (`Landingpage/hero-ohne-frau.jpg`)
 - Direkte Weiterleitung von „Workshop buchen“ an das Firmen-Dashboard inklusive gewähltem Termin (keine Rollenabfrage mehr)
 - FAQ-Chatbot ausschließlich auf der Landingpage (Workshops, Firmenbuchung, Gratis-Check, Tenant-Report, Termine); Antwortlogik in `shared/chat-intents.js`
 - Light-/Dark-Mode nach den sey-IT-Grundfarben
 - Umschaltung zwischen Deutsch und Englisch; Sprache und Theme bleiben beim Seitenwechsel erhalten
 - Sprachschalter mit Flagge der Zielsprache
 - Dezentes Hintergrundbild hinter dem Firmen-Dashboard
+- Orangefarbener Fortschrittsstreifen (4 px, 8 Sekunden pro Durchlauf) unter dem sey-IT-Logo auf Landingpage und Dashboard; bei reduzierter Bewegung steht er still. Auf dem Dashboard schließt der Tenant-Check unten bündig mit der letzten Workshop-Karte ab.
+- Präsentation im Ordner `Praesentation/`: `Projekt-MLP.pptx` (5 Folien, Dunkelmodus mit Orange) und das Ablaufbild `ablauf-skizze.svg`
 
 ## Demo-Einschränkungen
 
 - Demo-Buchungen des Firmen-Dashboards werden nur im `localStorage` des Browsers gespeichert und nicht an sey-IT übermittelt.
+- Die über den QR-Code erfassten E-Mail-Adressen liegen nur im `localStorage` des Teilnehmer-Browsers und erreichen die Firma nicht. Dafür wäre ein Backend nötig.
+- Der QR-Code funktioniert auf Handys nur, wenn das Dashboard unter einer von dort erreichbaren Internetadresse liegt. Ein Link auf eine lokale Datei (`file:///…`) lässt sich nicht öffnen.
 - Es gibt kein Backend, keine Anmeldung und keine Benutzerverwaltung; das Dashboard ist ohne Authentifizierung direkt erreichbar.
 - Der Chatbot verwendet lokale FAQ-Antworten und ist nicht mit einem Backend oder KI-Dienst verbunden.
 - Zertifikatsseite, Zertifikats-Teilen und Privatkunden-Dashboard wurden entfernt; das Zertifikat gibt es als Download im Firmen-Dashboard.
