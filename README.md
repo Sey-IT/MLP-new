@@ -1,7 +1,6 @@
-# sey-IT Workshopportal
+#Workshopportal
 
-Kleine, responsive HTML-Demo für die Buchung des „Microsoft License Pro Workshop“ durch Firmenkunden. Die Gestaltung orientiert sich am dunklen sey-IT-Auftritt und verwendet das offizielle Logo von sey-it.com. Es gibt ausschließlich Firmenkunden, keine Privatpersonen.
-
+Kleine, responsive HTML-Demo für die Buchung des „Microsoft License Pro Workshop“ durch Firmenkunden.
 ## Projektstruktur
 
 ```text
