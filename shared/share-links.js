@@ -11,8 +11,17 @@
         en: (workshopName, date) => `We are attending the ${workshopName} by sey-IT on ${date}.`
     };
 
+    const CERTIFICATE_TEMPLATES = {
+        de: (workshopName, date) => `Ich habe am ${date} erfolgreich am ${workshopName} der sey-IT teilgenommen und mein Zertifikat erhalten.`,
+        en: (workshopName, date) => `I successfully completed the ${workshopName} by sey-IT on ${date} and received my certificate.`
+    };
+
     function buildShareText(workshopName, date, language = 'de') {
         return (SHARE_TEMPLATES[language] || SHARE_TEMPLATES.de)(workshopName, date);
+    }
+
+    function buildCertificateShareText(workshopName, date, language = 'de') {
+        return (CERTIFICATE_TEMPLATES[language] || CERTIFICATE_TEMPLATES.de)(workshopName, date);
     }
 
     function buildShareLinks(text, pageUrl) {
@@ -25,5 +34,5 @@
         };
     }
 
-    return {buildShareText, buildShareLinks};
+    return {buildShareText, buildCertificateShareText, buildShareLinks};
 });

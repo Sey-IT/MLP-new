@@ -81,10 +81,7 @@
             backdrop-filter: blur(14px);
         }
 
-        @keyframes header-progress {
-            from { width: 0; }
-            to { width: 100%; }
-        }
+
 
         header::after {
             position: absolute;
@@ -93,7 +90,6 @@
             height: 4px;
             width: 100%;
             background: #ff6600;
-            animation: header-progress 8s linear infinite both;
             content: "";
         }
 
@@ -422,9 +418,28 @@
 
         .participant-form {
             display: grid;
-            grid-template-columns: 1fr 1fr auto;
+            grid-template-columns: 1fr 1fr 1fr auto;
             gap: 10px;
             align-items: end;
+        }
+
+        .participant-form[hidden] {
+            display: none;
+        }
+
+        .participant-result-actions {
+            justify-content: flex-start;
+        }
+
+        .participant-share-heading {
+            margin: 18px 0 8px;
+            font-weight: 600;
+        }
+
+        .share-hint {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.85rem;
         }
 
         .participant-form label {
@@ -461,6 +476,10 @@
         }
 
         .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
             min-height: 42px;
             padding: 9px 16px;
             border: 0;
@@ -469,6 +488,7 @@
             color: var(--button-text);
             font: inherit;
             font-weight: 700;
+            text-decoration: none;
             cursor: pointer;
             transition: background-color 0.2s;
         }
@@ -661,14 +681,18 @@
         <section class="booking-card participant-view" id="participantView" aria-labelledby="participantHeading" hidden>
             <h2 id="participantHeading" data-i18n="participantHeading">Ihr Teilnahmezertifikat</h2>
             <p class="seat-label" id="participantCourse"></p>
-            <p id="participantIntro" data-i18n="participantIntro">Tragen Sie Ihren Namen und Ihre private oder geschäftliche E-Mail-Adresse ein, um Ihr Zertifikat herunterzuladen.</p>
+            <p id="participantIntro" data-i18n="participantIntro">Tragen Sie Ihren Vor- und Nachnamen so ein, wie Ihre Firma Sie angemeldet hat, sowie Ihre geschäftliche E-Mail-Adresse.</p>
             <form class="participant-form" id="participantForm" novalidate>
                 <div>
-                    <label for="participantName" data-i18n="companyParticipantName">Name</label>
-                    <input id="participantName" name="name" type="text" autocomplete="name">
+                    <label for="participantFirstName" data-i18n="companyParticipantFirstName">Vorname</label>
+                    <input id="participantFirstName" name="firstName" type="text" autocomplete="given-name">
                 </div>
                 <div>
-                    <label for="participantEmail" data-i18n="participantPrivateEmail">Private oder geschäftliche E-Mail-Adresse</label>
+                    <label for="participantLastName" data-i18n="companyParticipantLastName">Nachname</label>
+                    <input id="participantLastName" name="lastName" type="text" autocomplete="family-name">
+                </div>
+                <div>
+                    <label for="participantEmail" data-i18n="companyParticipantEmail">Geschäftliche E-Mail-Adresse</label>
                     <input id="participantEmail" name="email" type="email" autocomplete="email">
                 </div>
                 <button class="btn" type="submit" data-i18n="participantSubmit">Zertifikat anfordern</button>
@@ -676,9 +700,16 @@
             <p class="form-error" id="participantError" role="alert" hidden></p>
             <div id="participantResult" aria-live="polite" hidden>
                 <p id="participantThanks"></p>
-                <div class="participant-actions" id="participantCertificate"></div>
+                <div class="participant-actions participant-result-actions" id="participantCertificate"></div>
+                <p class="participant-share-heading" data-i18n="participantShareHeading">Teilen Sie Ihren Erfolg:</p>
+                <div class="participant-actions participant-result-actions">
+                    <a class="btn btn-secondary" id="participantShareLinkedIn" target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/">LinkedIn</a>
+                    <a class="btn btn-secondary" id="participantShareFacebook" target="_blank" rel="noopener noreferrer" href="https://www.facebook.com/">Facebook</a>
+                    <a class="btn btn-secondary" id="participantShareInstagram" target="_blank" rel="noopener noreferrer" href="https://www.instagram.com/">Instagram</a>
+                </div>
+                <p class="share-hint" id="participantShareStatus" role="status" hidden></p>
             </div>
-            <p class="demo-note" data-i18n="participantDemoNote">Demo: Ihre Eingaben bleiben lokal in diesem Browser.</p>
+            <p class="demo-note" data-i18n="participantDemoNote">Ihre Angaben werden nur zur Prüfung verwendet und nicht gespeichert.</p>
         </section>
 
         <div id="companyView" data-company-only>
@@ -777,7 +808,8 @@
             invalidEmail: 'errorInvalidEmail',
             duplicateEmail: 'errorDuplicateEmail',
             bookingFull: 'errorBookingFull',
-            unknownBooking: 'errorUnknownBooking'
+            unknownBooking: 'errorUnknownBooking',
+            notRegistered: 'errorNotRegistered'
         };
         const translate = (key, values) => window.seyItI18n.translate(key, values);
         const courseById = id => COURSES.find(course => course.id === id);
@@ -999,7 +1031,11 @@
             const form = createElement('form', {className: 'participant-form'});
             form.noValidate = true;
 
-            [['name', 'text', 'companyParticipantName', 'name'], ['email', 'email', 'companyParticipantEmail', 'email']].forEach(([field, type, labelKey, autocomplete]) => {
+            [
+                ['firstName', 'text', 'companyParticipantFirstName', 'given-name'],
+                ['lastName', 'text', 'companyParticipantLastName', 'family-name'],
+                ['email', 'email', 'companyParticipantEmail', 'email']
+            ].forEach(([field, type, labelKey, autocomplete]) => {
                 const group = createElement('div');
                 const inputId = `${field}-${booking.courseId}`;
                 const label = createElement('label', {text: translate(labelKey)});
@@ -1021,7 +1057,7 @@
                 event.preventDefault();
                 const data = new FormData(form);
                 const result = window.seyItBookings.addParticipant(bookings, booking.courseId, {
-                    name: data.get('name'),
+                    name: window.seyItBookings.buildFullName(data.get('firstName'), data.get('lastName')),
                     email: data.get('email')
                 });
                 if (result.ok) {
@@ -1042,26 +1078,38 @@
             return actions;
         }
 
-        const PARTICIPANT_STORAGE_KEY = 'seyItParticipantRegistrations';
+        const participantState = {course: null, participant: null, errorKey: null, shareText: ''};
 
-        function loadRegistrations() {
-            try {
-                const stored = JSON.parse(localStorage.getItem(PARTICIPANT_STORAGE_KEY) || '[]');
-                return Array.isArray(stored) ? stored : [];
-            } catch {
-                return [];
-            }
+        function formatCourseDate(course, language) {
+            return course.start.toLocaleDateString(language === 'en' ? 'en-GB' : 'de-DE', {day: 'numeric', month: 'long', year: 'numeric'});
         }
 
-        function saveRegistrations(registrations) {
-            try {
-                localStorage.setItem(PARTICIPANT_STORAGE_KEY, JSON.stringify(registrations));
-            } catch {
-                // Registrations stay available for this visit when storage is unavailable.
-            }
+        function updateParticipantShareLinks(course) {
+            const language = document.documentElement.lang === 'en' ? 'en' : 'de';
+            participantState.shareText = window.seyItShare.buildCertificateShareText(
+                translate(course.titleKey),
+                formatCourseDate(course, language),
+                language
+            );
+            const links = window.seyItShare.buildShareLinks(participantState.shareText, SHARE_PAGE_URL);
+            document.getElementById('participantShareLinkedIn').href = links.linkedin;
+            document.getElementById('participantShareFacebook').href = links.facebook;
+            document.getElementById('participantShareInstagram').href = links.instagram;
         }
 
-        const participantState = {course: null, participant: null, errorKey: null};
+        function setupParticipantInstagramShare() {
+            const status = document.getElementById('participantShareStatus');
+            document.getElementById('participantShareInstagram').addEventListener('click', async () => {
+                let messageKey = 'shareInstagramCopied';
+                try {
+                    await navigator.clipboard.writeText(participantState.shareText);
+                } catch {
+                    messageKey = 'shareInstagramCopyFailed';
+                }
+                status.textContent = translate(messageKey);
+                status.hidden = false;
+            });
+        }
 
         function renderParticipantView() {
             const {course, participant, errorKey} = participantState;
@@ -1081,6 +1129,7 @@
             if (participant) {
                 document.getElementById('participantThanks').textContent = translate('participantThanks', {name: participant.name});
                 document.getElementById('participantCertificate').replaceChildren(renderCertificateButton(participant, course));
+                updateParticipantShareLinks(course);
             }
         }
 
@@ -1088,29 +1137,23 @@
             document.body.classList.add('participant-mode');
             document.getElementById('participantView').hidden = false;
             participantState.course = courseById(courseId) || null;
-            if (!participantState.course) participantState.errorKey = 'participantInvalidLink';
+            const checkValues = window.seyItParticipantLink.checkValuesFromSearch(window.location.search);
+            if (!participantState.course || checkValues.length === 0) participantState.errorKey = 'participantInvalidLink';
+            if (participantState.errorKey) participantState.course = null;
 
             document.getElementById('participantForm').addEventListener('submit', event => {
                 event.preventDefault();
                 const data = new FormData(event.currentTarget);
-                const registrations = loadRegistrations();
-                const result = window.seyItParticipantLink.registerParticipant(registrations, courseId, {
-                    name: data.get('name'),
+                const result = window.seyItParticipantLink.verifyParticipant(checkValues, courseId, {
+                    name: window.seyItBookings.buildFullName(data.get('firstName'), data.get('lastName')),
                     email: data.get('email')
                 });
-                const isKnownEmail = !result.ok && result.error === 'duplicateEmail';
-                if (!result.ok && !isKnownEmail) {
-                    participantState.errorKey = ERROR_KEYS[result.error];
-                } else {
-                    if (result.ok) saveRegistrations(result.registrations);
-                    participantState.errorKey = null;
-                    participantState.participant = {
-                        name: String(data.get('name')).trim(),
-                        email: String(data.get('email')).trim().toLowerCase()
-                    };
-                }
+                participantState.errorKey = result.ok ? null : ERROR_KEYS[result.error];
+                participantState.participant = result.ok ? result.participant : null;
                 renderParticipantView();
             });
+
+            setupParticipantInstagramShare();
 
             window.addEventListener('languagechange', renderParticipantView);
             renderParticipantView();
@@ -1166,7 +1209,7 @@
                         saveBookings();
                         render();
                     });
-                    item.append(identity, createParticipantActions(renderCertificateButton(participant, course), remove));
+                    item.append(identity, createParticipantActions(remove));
                     list.appendChild(item);
                 });
                 card.appendChild(list);

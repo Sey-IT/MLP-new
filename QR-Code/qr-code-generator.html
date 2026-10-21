@@ -5,22 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>sey-IT QR-Code-Generator</title>
     <style>
-        body { max-width: 560px; margin: 32px auto; padding: 0 16px; font-family: "Segoe UI", Arial, sans-serif; color: #26292e; }
-        h1 { font-size: 1.4rem; }
+        :root { color-scheme: dark; }
+        body { max-width: 560px; margin: 32px auto; padding: 0 16px; font-family: "Segoe UI", Arial, sans-serif; background: #26292e; color: #c8c8c8; }
+        h1 { font-size: 1.4rem; color: #ffffff; }
         label { display: block; margin: 16px 0 4px; font-weight: 600; }
-        input, select { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #999; border-radius: 4px; font: inherit; }
+        input, select { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, 0.27); border-radius: 4px; background: #1e2125; color: #e6e6e6; font: inherit; }
+        input::placeholder { color: #8a8d92; }
+        input:focus, select:focus { outline: 2px solid #ff6600; outline-offset: 1px; }
         .preview { display: grid; place-items: center; margin: 20px 0; }
-        .preview svg { width: 280px; height: auto; border: 1px solid #ddd; }
+        .preview svg { width: 280px; height: auto; }
         .preview text { fill: #000; }
         .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         button { padding: 10px 18px; border: 0; border-radius: 4px; background: #ff6600; color: #241a13; font: inherit; font-weight: 700; cursor: pointer; }
-        .hint { color: #555; font-size: 0.9rem; }
-        .error { color: #9d2525; }
+        button:hover { background: #e05500; }
+        .hint { color: #a9acb1; font-size: 0.9rem; }
+        .error { color: #ff8a80; }
     </style>
 </head>
 <body>
     <h1>QR-Code für Teilnehmer-Zertifikate</h1>
-    <p class="hint">Trage die Internetadresse ein, unter der das Firmen-Dashboard erreichbar ist (nicht die lokale Datei), und lade den Code für PowerPoint herunter.</p>
+    <p class="hint">Trage die Internetadresse ein, unter der das Firmen-Dashboard erreichbar ist (nicht die lokale Datei), und lade den Code für PowerPoint herunter. Der Code enthält Prüfwerte der Namen der im Dashboard angemeldeten Teilnehmer. Erstelle ihn deshalb neu, sobald sich die Anmeldungen ändern.</p>
 
     <label for="baseUrl">Adresse des Firmen-Dashboards</label>
     <input id="baseUrl" type="url" placeholder="https://beispiel.de/Firmen%20Dashboard/firmen-dashboard.html">
@@ -32,6 +36,7 @@
     </select>
 
     <p class="error" id="error" role="alert" hidden></p>
+    <p class="hint" id="participantInfo" hidden></p>
     <div class="preview" id="preview"></div>
 
     <div class="actions">
@@ -42,20 +47,59 @@
     <script src="../shared/participant-link.js"></script>
     <script src="../shared/vendor/qrcode.js"></script>
     <script src="../shared/qr-code.js"></script>
+    <script src="../shared/sey-it-logo.js"></script>
     <script>
         const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
         const PNG_SIZE_PX = 1200;
         const SVG_WIDTH_PX = 1000;
         const CAPTION_TEXT = 'Hier zum Zertifikat';
         const CAPTION_HEIGHT_RATIO = 0.2;
+        const FRAME_COLOR = '#ff6600';
+        const FRAME_WIDTH_MODULES = 1.2;
+        const COMPANY_BOOKINGS_STORAGE_KEY = 'seyItCompanyBookings';
         const baseUrlInput = document.getElementById('baseUrl');
         const courseSelect = document.getElementById('course');
         const preview = document.getElementById('preview');
         const error = document.getElementById('error');
+        const participantInfo = document.getElementById('participantInfo');
         let currentSvg = null;
 
+        function registeredNames(courseId) {
+            try {
+                const bookings = JSON.parse(localStorage.getItem(COMPANY_BOOKINGS_STORAGE_KEY) || '[]');
+                const booking = Array.isArray(bookings) ? bookings.find(entry => entry.courseId === courseId) : null;
+                return booking && Array.isArray(booking.participants)
+                    ? booking.participants.map(participant => participant.name)
+                    : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.hidden = false;
+        }
+
+        function createSvgElement(name, attributes) {
+            const element = document.createElementNS(SVG_NAMESPACE, name);
+            Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
+            return element;
+        }
+
+        function createLogo(size, offsetY) {
+            const {width, height, paths} = window.seyItLogo;
+            const {box, logo} = window.seyItQr.buildLogoPlacement(size, width / height);
+            const group = createSvgElement('g', {transform: `translate(0 ${offsetY})`});
+            const backing = createSvgElement('rect', {...box, fill: '#ffffff'});
+            const logoSvg = createSvgElement('svg', {...logo, viewBox: `0 0 ${width} ${height}`});
+            paths.forEach(({fill, d}) => logoSvg.appendChild(createSvgElement('path', {fill, d})));
+            group.append(backing, logoSvg);
+            return group;
+        }
+
         function createSvg(text) {
-            const {size, path} = window.seyItQr.buildQrPath(text);
+            const {size, path} = window.seyItQr.buildQrPath(text, {errorCorrectionLevel: 'H'});
             const captionHeight = size * CAPTION_HEIGHT_RATIO;
             const totalHeight = size + captionHeight;
             const svg = document.createElementNS(SVG_NAMESPACE, 'svg');
@@ -63,10 +107,14 @@
             svg.setAttribute('viewBox', `0 0 ${size} ${totalHeight}`);
             svg.setAttribute('width', String(SVG_WIDTH_PX));
             svg.setAttribute('height', String(Math.round(SVG_WIDTH_PX * totalHeight / size)));
-            const background = document.createElementNS(SVG_NAMESPACE, 'rect');
-            background.setAttribute('width', String(size));
-            background.setAttribute('height', String(totalHeight));
-            background.setAttribute('fill', '#ffffff');
+            const frameGeometry = {
+                x: FRAME_WIDTH_MODULES / 2,
+                y: FRAME_WIDTH_MODULES / 2,
+                width: size - FRAME_WIDTH_MODULES,
+                height: totalHeight - FRAME_WIDTH_MODULES,
+                rx: FRAME_WIDTH_MODULES * 2
+            };
+            const background = createSvgElement('rect', {...frameGeometry, fill: '#ffffff'});
             const caption = document.createElementNS(SVG_NAMESPACE, 'text');
             caption.textContent = CAPTION_TEXT;
             caption.setAttribute('x', String(size / 2));
@@ -81,7 +129,13 @@
             shape.setAttribute('fill', '#000000');
             shape.setAttribute('shape-rendering', 'crispEdges');
             shape.setAttribute('transform', `translate(0 ${captionHeight})`);
-            svg.append(background, caption, shape);
+            const frame = createSvgElement('rect', {
+                ...frameGeometry,
+                fill: 'none',
+                stroke: FRAME_COLOR,
+                'stroke-width': FRAME_WIDTH_MODULES
+            });
+            svg.append(background, caption, shape, createLogo(size, captionHeight), frame);
             return svg;
         }
 
@@ -89,15 +143,21 @@
             currentSvg = null;
             preview.replaceChildren();
             error.hidden = true;
+            const names = registeredNames(courseSelect.value);
+            participantInfo.hidden = names.length === 0;
+            participantInfo.textContent = `${names.length} angemeldete Teilnehmer werden im QR-Code berücksichtigt.`;
+            if (names.length === 0) {
+                showError('Für diesen Termin sind keine Teilnehmer angemeldet. Melde sie zuerst im Firmen-Dashboard an.');
+                return;
+            }
             if (!baseUrlInput.value.trim()) return;
 
             try {
-                const url = window.seyItParticipantLink.buildParticipantUrl(baseUrlInput.value.trim(), courseSelect.value);
+                const url = window.seyItParticipantLink.buildParticipantUrl(baseUrlInput.value.trim(), courseSelect.value, names);
                 currentSvg = createSvg(url);
                 preview.appendChild(currentSvg.cloneNode(true));
             } catch {
-                error.textContent = 'Bitte eine vollständige Adresse mit https:// eingeben.';
-                error.hidden = false;
+                showError('Bitte eine vollständige Adresse mit https:// eingeben.');
             }
         }
 
@@ -138,6 +198,9 @@
 
         baseUrlInput.addEventListener('input', update);
         courseSelect.addEventListener('change', update);
+        const requestedCourse = new URLSearchParams(window.location.search).get('course');
+        if ([...courseSelect.options].some(option => option.value === requestedCourse)) courseSelect.value = requestedCourse;
+        update();
     </script>
 </body>
 </html>

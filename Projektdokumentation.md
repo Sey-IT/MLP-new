@@ -11,14 +11,14 @@ Stand: 20.10.2026
 2. Sie klicken bei einem Termin auf „Workshop buchen“.
 3. Sie landen im Firmen-Dashboard, der Verwaltungsseite der Firma. Dort melden Sie Mitarbeitende an (bis zu 20 pro Termin).
 4. Das Dashboard zeigt, in wie vielen Tagen der Workshop beginnt, z. B. „Ihr Workshop ist in 30 Tagen“.
-5. Nach dem Workshop kann für jede angemeldete Person ein Teilnahmezertifikat als PDF heruntergeladen werden.
+5. Nach dem Workshop laden die Teilnehmer ihr Teilnahmezertifikat selbst als PDF herunter (über den QR-Code, siehe Punkt 7). Im Firmen-Dashboard gibt es keinen Zertifikat-Download.
 6. Über die Symbole am rechten Rand lässt sich die Teilnahme auf Facebook, Instagram oder LinkedIn teilen.
-7. Auf der letzten Präsentationsfolie steht ein QR-Code (mit dem Generator im Ordner `QR-Code` erzeugt). Teilnehmer scannen ihn, landen auf einer eigenen Seite, tragen Name und E-Mail-Adresse ein und laden dort ihr Zertifikat herunter.
+7. Auf der letzten Präsentationsfolie steht ein QR-Code (mit dem Generator im Ordner `QR-Code` erzeugt). Teilnehmer scannen ihn, landen auf einer eigenen Seite, tragen Vor- und Nachname sowie eine E-Mail-Adresse ein und laden dort ihr Zertifikat herunter. Geprüft wird nur der Name, so wie die Firma den Teilnehmer angemeldet hat. Die E-Mail-Adresse darf von der angemeldeten abweichen (Beispiel: Die Telekom meldet 20 Teilnehmer mit Telekom-Adressen an, ein Teilnehmer gibt nach dem Workshop seine private Adresse ein und erhält trotzdem sein Zertifikat).
 
 **Wie probiere ich es aus?** Im Ordner `Landingpage` die Datei `index.html` per Doppelklick öffnen. Es ist nichts zu installieren. Das sey-IT-Logo wird aus dem Internet geladen, die Seite braucht also eine Internetverbindung.
 
 **Was ist wichtig zu wissen?**
-- Alles, was Sie eingeben, bleibt nur in Ihrem eigenen Browser und wird nirgendwohin gesendet. Das gilt auch für E-Mail-Adressen, die Teilnehmer über den QR-Code eintragen.
+- Alles, was Sie eingeben, bleibt nur in Ihrem eigenen Browser und wird nirgendwohin gesendet. Was Teilnehmer über den QR-Code eintragen, wird nur geprüft und nicht gespeichert.
 - Der QR-Code funktioniert auf Handys erst, wenn die Seite im Internet erreichbar ist (nicht als lokale Datei).
 - Es gibt keine Anmeldung mit Passwort. Das Dashboard ist direkt erreichbar.
 - Das Zertifikat lässt sich erst ab dem Workshop-Beginn herunterladen. Davor ist der Button grau.
@@ -69,9 +69,9 @@ Es werden keine Pakete installiert und kein Server benötigt. Die Seiten laufen 
 
 1. Die Landingpage `Landingpage/index.html` zeigt zwei Workshop-Karten, je eine pro Termin.
 2. „Workshop buchen“ führt direkt zum Firmen-Dashboard. Der gewählte Termin, das Theme und die Sprache werden als URL-Parameter (`course`, `theme`, `lang`) übergeben. Es gibt keine Anmeldung und keine Rollenabfrage.
-3. Im Firmen-Dashboard werden Termine gebucht oder storniert, Teilnehmer angemeldet, der Tenant-Report bereitgestellt, das Teilnahmezertifikat geladen und die Buchung geteilt.
+3. Im Firmen-Dashboard werden Termine gebucht oder storniert, Teilnehmer angemeldet, der Tenant-Report bereitgestellt und die Buchung geteilt. Das Teilnahmezertifikat gibt es nur in der Teilnehmer-Ansicht.
 4. „Abmelden“ führt zurück zur Landingpage.
-5. Teilnehmer-Weg: Der QR-Code (aus `QR-Code/qr-code-generator.html`) führt auf `firmen-dashboard.html?participant=<Termin-ID>`. Diese Ansicht zeigt nur Name, E-Mail-Feld (privat oder geschäftlich) und den Zertifikat-Download; Firmenbereich, Buchungen und Tenant-Check sind ausgeblendet. Die Eingabe wird im `localStorage` abgelegt. Eine bereits erfasste E-Mail-Adresse darf das Zertifikat erneut laden.
+5. Teilnehmer-Weg: Der QR-Code (aus `QR-Code/qr-code-generator.html`) führt auf `firmen-dashboard.html?participant=<Termin-ID>&k=<Prüfwerte>`. Der Generator liest dafür die im Dashboard angemeldeten Teilnehmer des Termins und hängt je Name einen 8-stelligen Prüfwert (FNV-1a aus Termin-ID und Vor- und Nachname, ohne Beachtung von Groß-/Kleinschreibung und doppelten Leerzeichen) an, nie den Namen selbst. Die Ansicht fragt Vorname, Nachname und geschäftliche E-Mail-Adresse ab. Die E-Mail-Adresse wird nur auf gültiges Format geprüft und nicht mit der Anmeldung verglichen, da sie von der angemeldeten Adresse abweichen kann. Passt der Prüfwert des eingegebenen Namens, erscheinen Zertifikat-Download (ab Workshop-Beginn) und Teilen-Buttons für LinkedIn, Facebook und Instagram. Firmenbereich, Buchungen und Tenant-Check sind ausgeblendet; die Eingaben werden nicht gespeichert. Ändern sich die Anmeldungen, muss der QR-Code neu erstellt werden.
 
 ## 3. Projektstruktur
 
@@ -96,6 +96,7 @@ Es werden keine Pakete installiert und kein Server benötigt. Die Seiten laufen 
 │   ├── certificate.js
 │   ├── participant-link.js
 │   ├── qr-code.js
+│   ├── sey-it-logo.js
 │   ├── vendor/qrcode.js         Fremdbibliothek qrcode-generator 1.4.4 (MIT)
 │   ├── landing-engagement.js
 │   └── chat-intents.js
@@ -123,12 +124,12 @@ Es werden keine Pakete installiert und kein Server benötigt. Die Seiten laufen 
 - **Countdown:** Der Text „Ihr Workshop ist in X Tagen“ zählt täglich um einen Kalendertag herunter. Er bezieht sich auf den nächsten gebuchten Termin und aktualisiert sich jede Minute. Am Termintag steht „Ihr Workshop ist heute“. Ohne Buchung erscheint ein Hinweis, nach Beginn eine Meldung.
 - **Begrüßung:** „Guten Tag, Teilnehmer!“ passt sich an, sobald ein Teilnehmer angemeldet ist. Der Firmenname wird aus der E-Mail-Domain des ersten Teilnehmers abgeleitet (`anna@muster-software.com` ergibt „Muster Software“). Bei privaten Mail-Anbietern wie gmail.com oder web.de bleibt es bei „Teilnehmer“ (englisch „Participant“, Schlüssel `welcomeFallbackName`). Das gilt auch für „Angemeldet als“ im Kopf.
 - **Buchungen:** Termine einzeln buchen und stornieren. Pro Termin gibt es bis zu 20 Teilnehmer mit Name und E-Mail, einen Auslastungsbalken und Fehlermeldungen bei ungültiger oder doppelter E-Mail und bei voller Buchung.
-- **Teilnahmezertifikat:** Pro angemeldetem Teilnehmer gibt es einen Download als PDF (A4 quer) im sey-IT-Stil mit Name, Workshop und Termin, auf Deutsch oder Englisch. Der Button ist erst ab Workshop-Beginn aktiv und davor deaktiviert („Zertifikat ab Workshop-Beginn“).
+- **Teilnahmezertifikat:** Download als PDF (A4 quer) im sey-IT-Stil mit Name, Workshop und Termin, auf Deutsch oder Englisch. Der Download ist nur in der Teilnehmer-Ansicht (QR-Code) nach erfolgreicher Namensprüfung möglich, nicht im Firmenbereich des Dashboards. Der Button ist erst ab Workshop-Beginn aktiv und davor deaktiviert („Zertifikat ab Workshop-Beginn“).
 - **Teilen-Leiste:** Am rechten Rand stehen Icons für Facebook, Instagram und LinkedIn in Orange, sichtbar bei vorhandener Buchung. Facebook und LinkedIn öffnen den Teilen-Dialog für `https://sey-it.com/`. Instagram hat keinen Web-Teilen-Link, daher wird der Text kopiert und Instagram geöffnet.
 - **Tenant-Check:** Kurzanleitung zum Export aus dem Microsoft 365 Admin Center und Upload für `.csv`, `.xlsx` und `.xls` (max. 5 MB). In der Demo wird die Datei nicht übertragen. Er steht rechts neben den Buchungen und den buchbaren Workshops, beide Spalten schließen unten bündig ab (Container 1100 px; unter 900 px untereinander).
-- **Teilnehmer-Ansicht:** Das Dashboard zeigt keinen QR-Code. Der Code kommt aus dem Generator und kodiert `firmen-dashboard.html?participant=<Termin-ID>`. Mit diesem Parameter schaltet die Seite in die Teilnehmer-Ansicht (`body.participant-mode`): Firmenbereich, Teilen-Leiste und Abmelden sind ausgeblendet, es bleiben Name, E-Mail-Feld (privat oder geschäftlich) und der Zertifikat-Download. Der Parameter `course` bucht dagegen weiterhin einen Termin, deshalb nutzt der QR-Code `participant`.
+- **Teilnehmer-Ansicht:** Das Dashboard zeigt weder einen QR-Code noch einen Link zum Generator; sey-IT erstellt den Code separat mit `QR-Code/qr-code-generator.html`. Der Code kodiert `firmen-dashboard.html?participant=<Termin-ID>&k=<Prüfwerte>`. Mit diesem Parameter schaltet die Seite in die Teilnehmer-Ansicht (`body.participant-mode`): Firmenbereich, Teilen-Leiste und Abmelden sind ausgeblendet, es bleiben Vorname, Nachname, geschäftliche E-Mail-Adresse, nach erfolgreicher Prüfung der Zertifikat-Download und die Teilen-Buttons. Ein Link ohne Prüfwerte gilt als ungültig. Der Parameter `course` bucht dagegen weiterhin einen Termin, deshalb nutzt der QR-Code `participant`.
 - Sprach- und Theme-Schalter.
-- **Kopfleiste:** Unter dem Logo läuft ein orangefarbener Streifen als Fortschrittsleiste (4 px, 8 Sekunden pro Durchlauf, blasse Spur dahinter). Bei reduzierter Bewegung steht er still. Dasselbe gilt für die Landingpage.
+- **Kopfleiste:** Unter dem Logo liegt ein statischer orangefarbener Streifen (4 px). Dasselbe gilt für die Landingpage.
 
 ## 5. Module in `shared/`
 
@@ -139,14 +140,15 @@ Alle Module sind UMD-Skripte. Sie laufen im Browser über ein `window.seyIt…`-
 | `company-bookings.js` | `seyItBookings` | Buchungen hinzufügen und entfernen, Teilnehmer validieren (Name, E-Mail, Duplikate, Limit 20), freie Plätze. Funktionen verändern ihre Eingaben nicht. |
 | `tenant-report.js` | `seyItTenantReport` | Dateiendung und Größe prüfen, Größen formatieren. |
 | `workshop-countdown.js` | `seyItCountdown` | `daysUntil` (Kalendertage, nie negativ, sommerzeitsicher), `splitRemainingTime`, `findNextStart`. |
-| `share-links.js` | `seyItShare` | Teilen-Links und Share-Text in Deutsch und Englisch. |
+| `share-links.js` | `seyItShare` | Teilen-Links, Share-Text und Zertifikats-Text (`buildCertificateShareText`) in Deutsch und Englisch. |
 | `certificate.js` | `seyItCertificate` | `isCertificateAvailable`, `buildFileName`, `buildPdfFromJpeg` (PDF ohne externe Bibliothek). |
-| `participant-link.js` | `seyItParticipantLink` | Teilnehmer-Link bauen (`buildParticipantUrl`), Termin aus der URL lesen, Eingaben prüfen und je Termin ohne Duplikate speichern (`registerParticipant`). |
-| `qr-code.js` | `seyItQr` | `buildQrPath` liefert Größe und SVG-Pfad eines QR-Codes (Fehlerkorrektur M, 4 Module Ruhezone) auf Basis von `vendor/qrcode.js`. |
+| `participant-link.js` | `seyItParticipantLink` | Teilnehmer-Link mit Prüfwerten bauen (`buildParticipantUrl`, `nameCheckValue`), Termin und Prüfwerte aus der URL lesen und Teilnehmer über Vor- und Nachnamen verifizieren (`verifyParticipant`). |
+| `qr-code.js` | `seyItQr` | `buildQrPath` liefert Größe und SVG-Pfad eines QR-Codes (Fehlerkorrektur standardmäßig M, im Generator H, 4 Module Ruhezone) auf Basis von `vendor/qrcode.js`. `buildLogoPlacement` berechnet die weiße Fläche und die Position des Logos in der Mitte. |
+| `sey-it-logo.js` | `seyItLogo` | Pfade des sey-IT-Logos (identisch mit `QR-Code/seyit-logo.svg`), lokal eingebettet, damit der PNG-Export ohne externe Bilder funktioniert. |
 | `landing-engagement.js` | `seyItEngagement` | Validierung des Gratis-Checks, Bewertungslogik und Durchschnitt. |
 | `chat-intents.js` | `seyItChatIntents` | Zuordnung von Fragen zu Antworten (ohne Beachtung der Groß-/Kleinschreibung). |
 
-`vendor/qrcode.js` ist die unveränderte Bibliothek `qrcode-generator` 1.4.4 von Kazuhiko Arase (MIT-Lizenz). `QR-Code/qr-code-generator.html` erzeugt daraus den Export für PowerPoint: ein SVG oder PNG mit der Überschrift „Hier zum Zertifikat“ und darunter dem Code, für eine frei eingegebene Dashboard-Adresse und den gewählten Termin.
+`vendor/qrcode.js` ist die unveränderte Bibliothek `qrcode-generator` 1.4.4 von Kazuhiko Arase (MIT-Lizenz). `QR-Code/qr-code-generator.html` erzeugt daraus den Export für PowerPoint: ein SVG oder PNG mit orangem, abgerundetem Rahmen (#ff6600, Ecken außerhalb transparent), der Überschrift „Hier zum Zertifikat“ und darunter dem Code mit sey-IT-Logo (38 % der Codebreite), für eine frei eingegebene Dashboard-Adresse und den gewählten Termin.
 
 Das Zertifikat entsteht so: Das Dashboard zeichnet es auf ein Canvas (1754 × 1240 px), wandelt es in ein JPEG um und bettet es mit `buildPdfFromJpeg` in ein einseitiges PDF ein. Es lädt als `Teilnahmezertifikat-<Name>-<Datum>.pdf` herunter. Umlaute im Namen werden umgeschrieben (ä → ae).
 
@@ -171,7 +173,6 @@ Es gibt kein Backend. Alle Daten liegen im `localStorage` des Browsers und werde
 | `seyItCompanyBookings` | Buchungen mit Termin-ID und Teilnehmern |
 | `seyItFreeCheckRequests` | Anfragen des Gratis-Checks |
 | `seyItFeedback` | Sternebewertungen und Kommentare |
-| `seyItParticipantRegistrations` | über den QR-Code erfasste Teilnehmer (Termin-ID, Name, E-Mail) |
 | `seyItTheme` | gewähltes Theme |
 
 Termin-IDs: `microsoft-licensing-1118` und `microsoft-licensing-1125`.
@@ -192,7 +193,7 @@ Termin-IDs: `microsoft-licensing-1118` und `microsoft-licensing-1125`.
 | `workshop-countdown.test.js` | Restzeit und Tageszählung |
 | `share-links.test.js` | Teilen-Links und Texte |
 | `certificate.test.js` | Verfügbarkeit, Dateiname, PDF-Aufbau |
-| `participant-link.test.js` | Teilnehmer-Link, Erfassung von Name und E-Mail |
+| `participant-link.test.js` | Teilnehmer-Link, Prüfwerte und Verifizierung über den Namen |
 | `qr-code.test.js` | Größe und Pfad des QR-Codes |
 
 Die Oberfläche (Landingpage und Dashboard) ist ohne automatische Tests. Sie wurde manuell im Browser geprüft, zuletzt ohne JavaScript-Fehler in der Konsole. Die Handy-Ansicht war nicht prüfbar.
@@ -209,11 +210,12 @@ Die Oberfläche (Landingpage und Dashboard) ist ohne automatische Tests. Sie wur
 - Es gibt weder Anmeldung noch Authentifizierung noch Benutzerverwaltung. Das Dashboard ist direkt erreichbar.
 - Die Daten bleiben lokal im Browser und werden nicht an sey-IT übermittelt.
 - Der Chatbot arbeitet mit lokalen FAQ-Antworten und ist nicht mit einem KI-Dienst verbunden. Die Chatbot-Antwort zu Zertifikaten fällt auf den Fallback zurück. Ein Intent mit Test lässt sich nachziehen.
-- Das Zertifikat ist pro Teilnehmer erst ab Workshop-Beginn ladbar. Das ist eine Annahme und vom Auftraggeber nicht bestätigt.
+- Das Zertifikat ist erst ab Workshop-Beginn ladbar. Das ist eine Annahme und vom Auftraggeber nicht bestätigt.
 - Beginn 9:00 Uhr ist angenommen. Die Konstante `WORKSHOP_START_HOUR` und die Termine in `COURSES` (im Dashboard) legen sie fest.
 - Der Countdown zählt Kalendertage: Er springt um Mitternacht und zeigt am 19.10.2026 für den 18.11. „30 Tage“.
 - Der Dashboard-Kopf zeigt weiterhin „Angemeldet als Teilnehmer“, obwohl es keine Anmeldung gibt.
-- Die über den QR-Code erfassten E-Mail-Adressen bleiben im Browser des Teilnehmers. Damit die Firma die Adressen tatsächlich erhält, braucht es ein Backend.
+- Die über den QR-Code eingegebenen Daten werden nicht gespeichert; das Zertifikat wird direkt im Browser heruntergeladen. Ein Versand an die eingegebene E-Mail-Adresse oder eine Übermittlung an die Firma braucht ein Backend.
+- Die Prüfung über Namen ist ein Demo-Schutz: Wer den QR-Code hat und einen angemeldeten Namen kennt, kann dessen Zertifikat abrufen. Ein echter Schutz erfordert eine serverseitige Prüfung.
 - Der QR-Code führt auf die Adresse, die im Generator eingetragen wird. Bei einer lokalen Datei (`file:///…`) lässt er sich auf einem Handy nicht öffnen. Für den echten Einsatz muss das Portal im Internet gehostet sein; für einen Test im WLAN reicht ein lokaler Server (`python -m http.server`).
 - Instagram unterstützt kein direktes Teilen per Link. Daher wird der Text kopiert und Instagram geöffnet.
 - Preise werden nicht genannt, sie gibt es auf Anfrage.
@@ -231,3 +233,4 @@ Die Oberfläche (Landingpage und Dashboard) ist ohne automatische Tests. Sie wur
 9. Landingpage umgebaut: Slogan statt Tacho-Grafik im Hero, ausklappende Workshop- und Check-Karten, Kostenloser Check neben den Workshops, breiteres Feedback, „So geht es weiter“ vor den Workshops, vibrierende Bonus-Kachel.
 10. Teilnehmer-Ansicht für den QR-Code, Generator für PowerPoint, Tenant-Check neben die Buchungen verschoben, Begrüßung „Teilnehmer“.
 11. Fortschrittsstreifen unter dem Logo auf Landingpage und Dashboard, Tenant-Check und letzte Workshop-Karte unten bündig, Ordner `Praesentation/` mit fünfseitiger PowerPoint und Ablaufbild.
+12. Teilnehmer-Anmeldung mit Vorname, Nachname und geschäftlicher E-Mail; Streifen unter dem Logo statisch; QR-Code mit sey-IT-Logo, orangem abgerundetem Rahmen und Prüfwerten der angemeldeten Namen; Zertifikat-Download und QR-Link aus dem Firmenbereich entfernt (nur noch über den QR-Code); Teilen-Buttons nach erfolgreicher Namensprüfung; vollständiger MIT-Lizenztext der QR-Bibliothek.

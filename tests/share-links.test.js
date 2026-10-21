@@ -42,4 +42,18 @@ test('the english share text names the workshop and its date', () => {
         'We are attending the Microsoft License Pro Workshop by sey-IT on 18 November 2026.'
     );
 });
+
+test('the certificate share text announces the completed workshop', () => {
+    assert.equal(
+        share.buildCertificateShareText('Microsoft License Pro Workshop', '18.11.2026'),
+        'Ich habe am 18.11.2026 erfolgreich am Microsoft License Pro Workshop der sey-IT teilgenommen und mein Zertifikat erhalten.'
+    );
+});
+
+test('the english certificate share text announces the completed workshop', () => {
+    assert.equal(
+        share.buildCertificateShareText('Microsoft License Pro Workshop', '18 November 2026', 'en'),
+        'I successfully completed the Microsoft License Pro Workshop by sey-IT on 18 November 2026 and received my certificate.'
+    );
+});
 }

@@ -41,6 +41,16 @@ test('participant name and email are trimmed', () => {
     assert.deepEqual(result.bookings[0].participants[0], {name: 'Anna', email: 'anna@firma.de'});
 });
 
+test('first and last name are combined into a full name', () => {
+    assert.equal(bookings.buildFullName('  Anna ', ' Beispiel  '), 'Anna Beispiel');
+});
+
+test('a missing first or last name yields an empty full name', () => {
+    assert.equal(bookings.buildFullName('Anna', ' '), '');
+    assert.equal(bookings.buildFullName('', 'Beispiel'), '');
+    assert.equal(bookings.buildFullName(null, undefined), '');
+});
+
 test('an empty name is rejected', () => {
     const list = bookings.addBooking([], 'c1');
     const result = bookings.addParticipant(list, 'c1', {name: ' ', email: 'a@b.de'});

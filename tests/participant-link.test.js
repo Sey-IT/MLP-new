@@ -25,37 +25,70 @@ test('course id is null without participant parameter', () => {
     assert.equal(participantLink.courseIdFromSearch('?course=abc'), null);
 });
 
-test('registering a participant stores a normalized private email', () => {
-    const result = participantLink.registerParticipant([], COURSE_ID, {name: '  Max Muster ', email: ' Max@Gmail.COM '});
+test('the check value is an 8 digit hex string independent of case and spacing', () => {
+    const value = participantLink.nameCheckValue(COURSE_ID, '  anna   BEISPIEL ');
+    assert.ok(/^[0-9a-f]{8}$/.test(value));
+    assert.equal(participantLink.nameCheckValue(COURSE_ID, 'Anna Beispiel'), value);
+});
+
+test('the check value differs per course and per name', () => {
+    const value = participantLink.nameCheckValue(COURSE_ID, 'Anna Beispiel');
+    assert.ok(participantLink.nameCheckValue('microsoft-licensing-1125', 'Anna Beispiel') !== value);
+    assert.ok(participantLink.nameCheckValue(COURSE_ID, 'Ben Beispiel') !== value);
+});
+
+test('participant url carries check values but never the plain name', () => {
+    const href = participantLink.buildParticipantUrl(PAGE_URL, COURSE_ID, ['Anna Beispiel', 'Ben Muster']);
+    assert.ok(!href.toLowerCase().includes('anna'));
+    assert.ok(!href.toLowerCase().includes('muster'));
+    assert.equal(participantLink.checkValuesFromSearch(new URL(href).search).length, 2);
+});
+
+test('check values round trip through the url', () => {
+    const href = participantLink.buildParticipantUrl(PAGE_URL, COURSE_ID, ['Anna Beispiel']);
+    assert.deepEqual(
+        participantLink.checkValuesFromSearch(new URL(href).search),
+        [participantLink.nameCheckValue(COURSE_ID, 'Anna Beispiel')]
+    );
+});
+
+test('duplicate names produce a single check value', () => {
+    const href = participantLink.buildParticipantUrl(PAGE_URL, COURSE_ID, ['Anna Beispiel', 'ANNA beispiel']);
+    assert.equal(participantLink.checkValuesFromSearch(new URL(href).search).length, 1);
+});
+
+test('missing or malformed check values yield an empty list', () => {
+    assert.deepEqual(participantLink.checkValuesFromSearch(`?participant=${COURSE_ID}`), []);
+    assert.deepEqual(participantLink.checkValuesFromSearch(`?participant=${COURSE_ID}&k=xyz`), []);
+});
+
+const checkValues = [participantLink.nameCheckValue(COURSE_ID, 'Anna Beispiel')];
+
+test('a registered participant is verified by name with normalized input', () => {
+    const result = participantLink.verifyParticipant(checkValues, COURSE_ID, {name: '  anna  beispiel ', email: ' ANNA@firma.de '});
+    assert.deepEqual(result, {ok: true, participant: {name: 'anna beispiel', email: 'anna@firma.de'}});
+});
+
+test('a registered name is accepted with any valid email address', () => {
+    const result = participantLink.verifyParticipant(checkValues, COURSE_ID, {name: 'Anna Beispiel', email: 'anna.beispiel@andere-firma.de'});
     assert.equal(result.ok, true);
-    assert.deepEqual(result.registrations, [{courseId: COURSE_ID, name: 'Max Muster', email: 'max@gmail.com'}]);
 });
 
-test('registering rejects an empty name', () => {
-    assert.deepEqual(participantLink.registerParticipant([], COURSE_ID, {name: ' ', email: 'a@b.de'}), {ok: false, error: 'invalidName'});
+test('an unregistered name is rejected', () => {
+    const result = participantLink.verifyParticipant(checkValues, COURSE_ID, {name: 'Ben Beispiel', email: 'anna@firma.de'});
+    assert.deepEqual(result, {ok: false, error: 'notRegistered'});
 });
 
-test('registering rejects an invalid email', () => {
-    assert.deepEqual(participantLink.registerParticipant([], COURSE_ID, {name: 'Max', email: 'kein-email'}), {ok: false, error: 'invalidEmail'});
+test('a registered name of a different course is rejected', () => {
+    const result = participantLink.verifyParticipant(checkValues, 'microsoft-licensing-1125', {name: 'Anna Beispiel', email: 'anna@firma.de'});
+    assert.deepEqual(result, {ok: false, error: 'notRegistered'});
 });
 
-test('registering rejects a duplicate email for the same course', () => {
-    const first = participantLink.registerParticipant([], COURSE_ID, {name: 'Max', email: 'max@gmail.com'});
-    const second = participantLink.registerParticipant(first.registrations, COURSE_ID, {name: 'Max M.', email: 'MAX@gmail.com'});
-    assert.deepEqual(second, {ok: false, error: 'duplicateEmail'});
+test('verification rejects an empty name', () => {
+    assert.deepEqual(participantLink.verifyParticipant(checkValues, COURSE_ID, {name: ' ', email: 'anna@firma.de'}), {ok: false, error: 'invalidName'});
 });
 
-test('the same email may register for a different course', () => {
-    const first = participantLink.registerParticipant([], COURSE_ID, {name: 'Max', email: 'max@gmail.com'});
-    const second = participantLink.registerParticipant(first.registrations, 'microsoft-licensing-1125', {name: 'Max', email: 'max@gmail.com'});
-    assert.equal(second.ok, true);
-});
-
-test('registrations are filtered by course', () => {
-    const entries = [
-        {courseId: COURSE_ID, name: 'A', email: 'a@x.de'},
-        {courseId: 'microsoft-licensing-1125', name: 'B', email: 'b@x.de'}
-    ];
-    assert.deepEqual(participantLink.registrationsForCourse(entries, COURSE_ID), [entries[0]]);
+test('verification rejects an invalid email', () => {
+    assert.deepEqual(participantLink.verifyParticipant(checkValues, COURSE_ID, {name: 'Anna Beispiel', email: 'kein-email'}), {ok: false, error: 'invalidEmail'});
 });
 }

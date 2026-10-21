@@ -81,11 +81,6 @@
             backdrop-filter: blur(14px);
         }
 
-        @keyframes header-progress {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
         .site-header::after {
             position: absolute;
             left: 0;
@@ -93,7 +88,6 @@
             height: 4px;
             width: 100%;
             background: #ff6600;
-            animation: header-progress 8s linear infinite both;
             content: "";
         }
 
@@ -541,7 +535,7 @@
 
         .trust-strip {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr;
             gap: 1px;
             margin: 24px 0 0;
             border-left: 4px solid #ff6600;
@@ -608,6 +602,15 @@
         .trust-strip strong {
             color: var(--accent-text);
             font-size: 1.05rem;
+        }
+
+        .trust-strip .trust-accent {
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.3), rgba(255, 102, 0, 0.1)), var(--surface);
+            box-shadow: inset 0 0 0 2px #ff6600;
+        }
+
+        .trust-strip .trust-accent span {
+            color: var(--text);
         }
 
         .trust-strip span {
@@ -1303,6 +1306,10 @@
                 <article>
                     <strong data-i18n="trustTeamTitle">Bis zu 20 Teilnehmer</strong>
                     <span data-i18n="trustTeamText">pro Workshop für Firmenbuchungen</span>
+                </article>
+                <article class="trust-accent">
+                    <strong data-i18n="trustExperienceTitle">Seit Jahren erfahren</strong>
+                    <span data-i18n="trustExperienceText">mit bis zu 20 Workshops pro Jahr</span>
                 </article>
             </section>
 

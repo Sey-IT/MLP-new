@@ -9,6 +9,12 @@
     const MAX_PARTICIPANTS = 20;
     const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+    function buildFullName(firstName, lastName) {
+        const first = String(firstName || '').trim();
+        const last = String(lastName || '').trim();
+        return first && last ? `${first} ${last}` : '';
+    }
+
     function addBooking(bookings, courseId) {
         if (bookings.some(booking => booking.courseId === courseId)) return bookings;
         return [...bookings, {courseId, participants: []}];
@@ -78,6 +84,7 @@
 
     return {
         MAX_PARTICIPANTS,
+        buildFullName,
         addBooking,
         removeBooking,
         addParticipant,
